@@ -6,7 +6,7 @@
 #ifndef structs_h
 #define structs_h
 
-struct req {
+struct udpRequest {
     int des;
     int bytesReceived;
     char data [2048];

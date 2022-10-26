@@ -16,7 +16,7 @@ const std::string currentDateTime() {
 }
 
 void* printRequest(void* r) {
-    req rq = *((req*)r);
+    udpRequest rq = *((udpRequest*)r);
     printf("%s | %s:%d | body length: %d\n", 
             currentDateTime().c_str(), inet_ntoa (rq.clientaddr.sin_addr),
             ntohs (rq.clientaddr.sin_port), rq.bytesReceived
@@ -27,5 +27,5 @@ void* printRequest(void* r) {
 }
 
 int main(int argc, char const *argv[]) {
-    return start_server_with_handler(printRequest, 20777, 2048, 1000);
+    return startServerWithHandler(printRequest, 20777, 2048, 1000);
 }

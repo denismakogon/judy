@@ -21,7 +21,7 @@ void sig_handler(int signo) {
     }
 }
 
-int start_server_with_handler(void* (*handler)(void*), int port, int bufferSize, int threadCount) {
+int startServerWithHandler(void* (*handler)(void*), int port, int bufferSize, int threadCount) {
     pthread_t threads[threadCount];
     int threadno = 0, fd;
 
@@ -56,8 +56,8 @@ int start_server_with_handler(void* (*handler)(void*), int port, int bufferSize,
     std::cout << "listening on 0.0.0.0:" << port << "...\n";
     while (1) {
         recvlen = recvfrom (fd, buf, bufferSize, 0, (sockaddr*) &clientaddr, &addrlen);
-        req *r = new req;
-        bzero (r, sizeof (req));
+        udpRequest *r = new udpRequest;
+        bzero (r, sizeof (udpRequest));
         r->bytesReceived = recvlen;
         r->addlen = addrlen;
         r->clientaddr = clientaddr;
