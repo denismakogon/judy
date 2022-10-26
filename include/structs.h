@@ -11,7 +11,7 @@ struct req {
     int bytesReceived;
     char data [2048];
     socklen_t addlen;
-    sockaddr_in clientaddr;
+    struct sockaddr_in clientaddr;
 };
 
 #endif /* structs_h */

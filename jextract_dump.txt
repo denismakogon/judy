@@ -1,0 +1,8 @@
+#### Extracted from: include/structs.h
+
+--source -t judy.server
+-I include/
+--include-struct req
+--include-function start_server_with_handler
+--output build/src/main/java
+include/c_api.h
