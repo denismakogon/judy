@@ -3,8 +3,8 @@
 
 #include "server.h"
 
-void printRequest(char*) {
-    puts("a new packet received!");
+void printRequest(char*, long bytesTransferred) {
+    printf("a new packet of %ld bytes received!\n", bytesTransferred);
     std::flush(std::cout);
 }
 

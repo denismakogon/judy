@@ -1,0 +1,52 @@
+name: build
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        include:
+          - os: ubuntu-latest
+            TARGET: linux
+    steps:
+      - name: 'Download jextract'
+        id: jextract
+        uses: oracle-actions/setup-java@v1
+        with:
+          install: false
+          uri: https://download.java.net/java/early_access/jextract/2/openjdk-19-jextract+2-3_${{ matrix.TARGET }}-x64_bin.tar.gz
+
+      - name: 'Extract jextract'
+        shell: sh
+        run: |
+          mkdir -p /tmp/jextract
+          tar --strip-components=1 -xvf ${{ steps.jextract.outputs.archive }} -C /tmp/jextract
+          export PATH=${PATH}:/tmp/jextract/bin
+      - name: 'Download JDK 19'
+        id: jdk_19
+        uses: oracle-actions/setup-java@v1
+        with:
+          website: jdk.java.net
+          release: 19
+
+      - name: 'Check out repository'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Install Conan
+        id: conan
+        uses: turtlebrowser/get-conan@main
+
+      - name: prepare-project
+        shell: bash
+        run: |
+          mkdir -p build && cd build
+          conan install --build=missing ..
+          cmake .. -DCMAKE_BUILD_TYPE=release
+          cmake --build .

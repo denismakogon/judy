@@ -21,25 +21,32 @@ const std::string currentDateTime() {
 }
 
 struct UdpServer {
-    explicit UdpServer(ip::udp::socket socket, void (*handler_)(char*), int threadPoolSize)
+    explicit UdpServer(ip::udp::socket socket, void (*handler_)(char*, long), int threadPoolSize)
         : socket_(std::move(socket)), pool(threadPoolSize) {
             this->handler = handler_;
             read();
     }
 private:
 
-    void handle_receive(const boost::system::error_code& error, char* data_, std::size_t /*bytes_transferred*/) {
+    void handleRequest(char* data, std::size_t bytes_transferred) {
+        boost::asio::post(this->pool, boost::bind(this->handler, data, bytes_transferred));
         auto requestUUID = boost::uuids::random_generator()();
         auto uuidString = boost::lexical_cast<std::string>(requestUUID);
 
+        printf("request ID: %s | payload size: %lu bytes | from '%s:%d' at %s ", 
+                uuidString.c_str(), 
+                bytes_transferred, 
+                remote_endpoint_.address().to_string().c_str(), 
+                remote_endpoint_.port(), currentDateTime().c_str()
+        );
+    }
+
+    void handle_receive(const boost::system::error_code& error, char* data_, std::size_t bytes_transferred) {
         if (error || strcmp(data_, "\n") == 0) {
             std::cerr << currentDateTime() << error.category().name() << ':' << error.value();
             return;
         }
-        printf("request ID: %s | from '%s:%d' at %s ", uuidString.c_str(), remote_endpoint_.address().to_string().c_str(), 
-            remote_endpoint_.port(), currentDateTime().c_str()
-        );
-        boost::asio::post(this->pool, boost::bind(this->handler, data_));
+        boost::asio::post(this->pool, boost::bind(&UdpServer::handleRequest, this, data_, bytes_transferred));
         this->read();
     }
 
@@ -59,10 +66,10 @@ private:
     boost::asio::thread_pool pool;
     ip::udp::socket socket_;
     ip::udp::endpoint remote_endpoint_;
-    void (*handler)(char*);
+    void (*handler)(char*, long);
 };
 
-void startServerWithHandlerV2(void (*handler)(char*), int port, int threadCount) {
+void startServerWithHandlerV2(void (*handler)(char*, long), int port, int threadCount) {
     try {
         io_context ctx;
         ip::udp::endpoint endpoint(ip::udp::v4(), port);
