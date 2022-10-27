@@ -1,10 +1,9 @@
 #include <iostream>
 #include <unistd.h>
 #include <cstring>
-#include <stdio.h>
+#include <thread>
 
 #include "server.h"
-#include "structs.h"
 
 const std::string currentDateTime() {
     time_t     now = time(0);
@@ -15,17 +14,11 @@ const std::string currentDateTime() {
     return buf;
 }
 
-void* printRequest(void* r) {
-    udpRequest rq = *((udpRequest*)r);
-    printf("%s | %s:%d | body length: %d\n", 
-            currentDateTime().c_str(), inet_ntoa (rq.clientaddr.sin_addr),
-            ntohs (rq.clientaddr.sin_port), rq.bytesReceived
-    );
+void printRequest(char*) {
+    puts(currentDateTime().c_str());
     std::flush(std::cout);
-
-    return NULL;
 }
 
-int main(int argc, char const *argv[]) {
-    return startServerWithHandler(printRequest, 20777, 2048, 1000);
+int main() {
+    startServerWithHandlerV2(&printRequest, 20777, std::thread::hardware_concurrency());
 }
