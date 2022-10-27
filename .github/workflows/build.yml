@@ -3,6 +3,8 @@ name: build
 on:
   pull_request:
     branches: [ main ]
+  push:
+    branches: [ main ]
 
 jobs:
   build-and-test:
@@ -46,3 +48,25 @@ jobs:
           export PATH=${PATH}:/tmp/jextract/bin
           mkdir -p build
           jextract -I /usr/local/include @jextract_dump.txt include/c_api.h
+
+      - name: version
+        id: version
+        shell: bash
+        run: echo "::set-output name=version::$(date +'%Y.%m.%d')"
+
+      - name: mvn
+        shell: bash
+        run: |
+          mvn clean package -Dversion=${{ steps.version.outputs.version }}
+
+      - name: 'make release'
+        if: github.event.pull_request.merged == true
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GH_RELEASE_TOKEN }}
+          automatic_release_tag: ${{ steps.version.outputs.version }}
+          prerelease: false
+          title: f1.game C API ${{ steps.version.outputs.version }}
+          files: |
+            LICENSE
+            target/*.jar
