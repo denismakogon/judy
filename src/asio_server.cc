@@ -1,9 +1,19 @@
 #include <iostream>
+#include <unistd.h>
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 #include <thread>
 
 using namespace boost::asio;
+
+const std::string currentDateTime() {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+    return buf;
+}
 
 struct UdpServer {
     explicit UdpServer(ip::udp::socket socket, void (*handler_)(char*), int threadPoolSize)
@@ -15,9 +25,12 @@ private:
 
     void handle_receive(const boost::system::error_code& error, char* data_, std::size_t /*bytes_transferred*/) {
         if (error || strcmp(data_, "\n") == 0) {
+            std::cerr << currentDateTime() << error.category().name() << ':' << error.value();
             return;
         }
-        printf("from '%s:%d' at ", remote_endpoint_.address().to_string().c_str(), remote_endpoint_.port());
+        printf("from '%s:%d' at %s ", remote_endpoint_.address().to_string().c_str(), 
+            remote_endpoint_.port(), currentDateTime().c_str()
+        );
         boost::asio::post(this->pool, boost::bind(this->handler, data_));
         this->read();
     }

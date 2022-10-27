@@ -37,7 +37,7 @@ If you're on something else like `linux` or `x86_64` arch, please following [the
 
 ```shell
 mkdir -p build && cd build
-conan .. install --build=missing
+conan install --build=missing ..
 cmake .. -DCMAKE_BUILD_TYPE=release
 cmake --build .
 ```
