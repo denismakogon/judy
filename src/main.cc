@@ -1,6 +1,4 @@
 #include <iostream>
-#include <unistd.h>
-#include <cstring>
 #include <thread>
 
 #include "server.h"
