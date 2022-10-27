@@ -27,6 +27,7 @@ jobs:
           mkdir -p /tmp/jextract
           tar --strip-components=1 -xvf ${{ steps.jextract.outputs.archive }} -C /tmp/jextract
           export PATH=${PATH}:/tmp/jextract/bin
+
       - name: 'Download JDK 19'
         id: jdk_19
         uses: oracle-actions/setup-java@v1
@@ -39,15 +40,9 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Install Conan
-        id: conan
-        uses: turtlebrowser/get-conan@main
-
       - name: prepare-project
         shell: bash
         run: |
-          conan profile update settings.compiler.libcxx=libstdc++11 default
-          mkdir -p build && cd build
-          conan install --build=missing ..
-          cmake .. -DCMAKE_BUILD_TYPE=release
-          cmake --build .
+          export PATH=${PATH}:/tmp/jextract/bin
+          mkdir -p build
+          jextract -I /usr/local/include @jextract_dump.txt include/c_api.h

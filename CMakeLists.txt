@@ -4,6 +4,12 @@ project(judy LANGUAGES C CXX VERSION 0.0.1 DESCRIPTION "Multithreaded CPP UDP se
 
 execute_process(COMMAND date +'%Y.%m.%d' OUTPUT_VARIABLE JAR_VERSION)
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    set(STDLIB_INCLUDE /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include)
+else()
+    set(STDLIB_INCLUDE /usr/local/include)
+endif()
+
 add_definitions("-std=c++14")
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
@@ -24,7 +30,7 @@ target_link_libraries(${PROJECT_NAME}-main ${Boost_LIBRARIES} )
 add_custom_target(
     java-sources 
     ALL
-    COMMAND jextract -I /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include @${CMAKE_CURRENT_SOURCE_DIR}/jextract_dump.txt ${CMAKE_CURRENT_SOURCE_DIR}/include/c_api.h
+    COMMAND jextract -I ${STDLIB_INCLUDE} @${CMAKE_CURRENT_SOURCE_DIR}/jextract_dump.txt ${CMAKE_CURRENT_SOURCE_DIR}/include/c_api.h
 )
 
 add_custom_target(
