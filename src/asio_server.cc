@@ -1,8 +1,13 @@
 #include <iostream>
 #include <unistd.h>
+#include <thread>
+
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
-#include <thread>
+#include <boost/lexical_cast.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/random_generator.hpp>
 
 using namespace boost::asio;
 
@@ -24,11 +29,14 @@ struct UdpServer {
 private:
 
     void handle_receive(const boost::system::error_code& error, char* data_, std::size_t /*bytes_transferred*/) {
+        auto requestUUID = boost::uuids::random_generator()();
+        auto uuidString = boost::lexical_cast<std::string>(requestUUID);
+
         if (error || strcmp(data_, "\n") == 0) {
             std::cerr << currentDateTime() << error.category().name() << ':' << error.value();
             return;
         }
-        printf("from '%s:%d' at %s ", remote_endpoint_.address().to_string().c_str(), 
+        printf("request ID: %s | from '%s:%d' at %s ", uuidString.c_str(), remote_endpoint_.address().to_string().c_str(), 
             remote_endpoint_.port(), currentDateTime().c_str()
         );
         boost::asio::post(this->pool, boost::bind(this->handler, data_));
