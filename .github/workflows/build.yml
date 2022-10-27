@@ -1,0 +1,72 @@
+name: build
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        include:
+          - os: ubuntu-latest
+            TARGET: linux
+    steps:
+      - name: 'Download jextract'
+        id: jextract
+        uses: oracle-actions/setup-java@v1
+        with:
+          install: false
+          uri: https://download.java.net/java/early_access/jextract/2/openjdk-19-jextract+2-3_${{ matrix.TARGET }}-x64_bin.tar.gz
+
+      - name: 'Extract jextract'
+        shell: sh
+        run: |
+          mkdir -p /tmp/jextract
+          tar --strip-components=1 -xvf ${{ steps.jextract.outputs.archive }} -C /tmp/jextract
+          export PATH=${PATH}:/tmp/jextract/bin
+
+      - name: 'Download JDK 19'
+        id: jdk_19
+        uses: oracle-actions/setup-java@v1
+        with:
+          website: jdk.java.net
+          release: 19
+
+      - name: 'Check out repository'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: prepare-project
+        shell: bash
+        run: |
+          export PATH=${PATH}:/tmp/jextract/bin
+          mkdir -p build
+          jextract -I /usr/local/include @jextract_dump.txt include/c_api.h
+
+      - name: version
+        id: version
+        shell: bash
+        run: echo "::set-output name=version::$(date +'%Y.%m.%d')"
+
+      - name: mvn
+        shell: bash
+        run: |
+          mvn clean package -Dversion=${{ steps.version.outputs.version }}
+
+      - name: 'make release'
+        if: github.event.pull_request.merged == true
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GH_RELEASE_TOKEN }}
+          automatic_release_tag: ${{ steps.version.outputs.version }}
+          prerelease: false
+          title: f1.game C API ${{ steps.version.outputs.version }}
+          files: |
+            LICENSE
+            target/*.jar

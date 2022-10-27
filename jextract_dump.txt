@@ -4,4 +4,5 @@
 -I include/
 --include-struct udpRequest
 --include-function startServerWithHandler
+--include-function startServerWithHandlerV2
 --output src/main/java
