@@ -57,7 +57,7 @@ jobs:
       - name: mvn
         shell: bash
         run: |
-          mvn clean package -Dversion=${{ steps.version.outputs.version }}
+          mvn clean package -Dversion=${{ steps.version.outputs.version }} -Dsrc.dir=src/main/java
 
       - name: 'make release'
         if: github.event.pull_request.merged == true
