@@ -60,7 +60,7 @@ jobs:
           mvn clean package -Dversion=${{ steps.version.outputs.version }} -Dsrc.dir=src/main/java
 
       - name: 'make release'
-        if: github.event.pull_request.merged == true
+        if: github.head_ref == 'main' && github.event_name == 'push'
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GH_RELEASE_TOKEN }}
