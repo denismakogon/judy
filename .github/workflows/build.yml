@@ -60,13 +60,13 @@ jobs:
           mvn clean package -Dversion=${{ steps.version.outputs.version }} -Dsrc.dir=src/main/java
 
       - name: 'make release'
-        if: github.head_ref == 'main' && github.event_name == 'push'
+        if: github.event_name == 'push'
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GH_RELEASE_TOKEN }}
           automatic_release_tag: ${{ steps.version.outputs.version }}
           prerelease: false
-          title: f1.game C API ${{ steps.version.outputs.version }}
+          title: CPP UDP server ${{ steps.version.outputs.version }}
           files: |
             LICENSE
             target/*.jar
