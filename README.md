@@ -1,3 +1,5 @@
+[![](https://jitpack.io/v/denismakogon/judy.svg)](https://jitpack.io/#denismakogon/judy)
+
 # Multithreaded CPP UDP server consumable through the C ABI consumption
 
 ## Prerequisites
