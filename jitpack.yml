@@ -3,7 +3,7 @@ before_install:
 install:
 - PROJECT=judy
 - version=$(date +'%Y.%m.%d')
-- JAR_NAME="$PROJECT.$version.jar"
+- JAR_NAME="$PROJECT.latest.jar"
 - FILE="jars/$JAR_NAME"
 - mkdir jars/
 - curl -L -o jars/$JAR_NAME https://github.com/denismakogon/$PROJECT/releases/download/$version/$JAR_NAME
