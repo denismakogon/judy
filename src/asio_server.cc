@@ -21,7 +21,7 @@ const std::string currentDateTime() {
 }
 
 struct UdpServer {
-    explicit UdpServer(ip::udp::socket socket, void (*handler_)(char*, long), int threadPoolSize)
+    explicit UdpServer(ip::udp::socket socket, void (*handler_)(char*, long, char*, int), int threadPoolSize)
         : socket_(std::move(socket)), pool(threadPoolSize) {
             this->handler = handler_;
             read();
@@ -29,7 +29,12 @@ struct UdpServer {
 private:
 
     void handleRequest(char* data, std::size_t bytes_transferred) {
-        boost::asio::post(this->pool, boost::bind(this->handler, data, bytes_transferred));
+        boost::asio::post(this->pool, boost::bind(
+            this->handler, data, bytes_transferred,
+            (char*) remote_endpoint_.address().to_string().c_str(),
+            remote_endpoint_.port()
+            )
+        );
         auto requestUUID = boost::uuids::random_generator()();
         auto uuidString = boost::lexical_cast<std::string>(requestUUID);
 
@@ -66,10 +71,10 @@ private:
     boost::asio::thread_pool pool;
     ip::udp::socket socket_;
     ip::udp::endpoint remote_endpoint_;
-    void (*handler)(char*, long);
+    void (*handler)(char*, long, char*, int);
 };
 
-void startServerWithHandlerV2(void (*handler)(char*, long), int port, int threadCount) {
+void startServerWithHandlerV2(void (*handler)(char*, long, char*, int), int port, int threadCount) {
     try {
         io_context ctx;
         ip::udp::endpoint endpoint(ip::udp::v4(), port);
