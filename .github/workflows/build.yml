@@ -72,6 +72,8 @@ jobs:
           conan profile update env.CXX=/usr/bin/clang++ default
           mkdir -p build && cd build
           conan install --build=missing ..
+          cmake .. -DCMAKE_BUILD_TYPE=release
+          cmake --build .
 
       - name: version
         id: version
@@ -81,7 +83,14 @@ jobs:
       - name: mvn
         shell: bash
         run: |
-          mvn clean package -Dsrc.dir=src/main/java
+          cd build
+          make java-sources
+
+      - name: jar
+        shell: bash
+        run: |
+          cd build
+          make jar
 
       - name: 'make release'
         if: github.event_name == 'push'
