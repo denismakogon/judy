@@ -78,7 +78,7 @@ jobs:
       - name: version
         id: version
         shell: bash
-        run: echo "::set-output name=version::$(date +'%Y.%m.%d')"
+        run: echo "version_var=$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
 
       - name: mvn
         shell: bash
@@ -97,9 +97,9 @@ jobs:
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GH_RELEASE_TOKEN }}
-          automatic_release_tag: ${{ steps.version.outputs.version }}
+          automatic_release_tag: ${{ env.version_var }}
           prerelease: false
-          title: CPP UDP server ${{ steps.version.outputs.version }}
+          title: CPP UDP server ${{ env.version_var }}
           files: |
             LICENSE
             target/*.jar
