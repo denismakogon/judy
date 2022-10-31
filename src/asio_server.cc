@@ -47,7 +47,7 @@ private:
             clientPort
         ));
 
-        printf("%s INFO   boost.server | payload size: %lu bytes | from '%s:%d'\n",
+        printf("%s INFO   boost.server.udp | payload size: %lu bytes | from '%s:%d'\n",
                 currentDateTime().c_str(), 
                 bytes_transferred, 
                 clientAddress, 
@@ -95,7 +95,7 @@ void startServerWithHandlerV2(void (*handler)(char*, long, char*, int), int port
         ip::udp::socket socket(ctx, endpoint);
         std::signal(SIGINT, signal_handler);
         shutdownHandler = [&](int signal) {
-            printf("%s | boost.server | shutting down...goodbye!\n", currentDateTime().c_str());
+            printf("%s INFO   boost.server.udp | shutting down...goodbye!\n", currentDateTime().c_str());
             socket.close();
             exit(0);
         };

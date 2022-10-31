@@ -62,6 +62,17 @@ jobs:
           brew install conan
           brew install boost
 
+      - name: conan profile
+        shell: bash
+        run: |
+          conan profile new default --detect
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+          conan profile update settings.compiler.version=12 default
+          conan profile update env.CC=/usr/bin/clang default
+          conan profile update env.CXX=/usr/bin/clang++ default
+          mkdir -p build && cd build
+          conan install --build=missing ..
+
       - name: version
         id: version
         shell: bash
