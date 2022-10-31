@@ -1,64 +1,76 @@
 #include <iostream>
+#include <csignal>
 #include <unistd.h>
 #include <thread>
 
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/uuid/uuid_io.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/random_generator.hpp>
 
 using namespace boost::asio;
+
+namespace {
+std::function<void(int)> shutdownHandler;
+void signal_handler(int signal) { shutdownHandler(signal); }
+}
 
 const std::string currentDateTime() {
     time_t     now = time(0);
     struct tm  tstruct;
     char       buf[80];
     tstruct = *localtime(&now);
-    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
     return buf;
 }
 
 struct UdpServer {
-    explicit UdpServer(ip::udp::socket socket, void (*handler_)(char*, long, char*, int), int threadPoolSize)
+    explicit UdpServer(ip::udp::socket socket, void (*handler_)(char*, long, char*, int), int bufferSize, int threadPoolSize)
         : socket_(std::move(socket)), pool(threadPoolSize) {
             this->handler = handler_;
+            this->bufferSize = bufferSize;
+            this->data_ = new char[bufferSize];
             read();
     }
 private:
 
-    void handleRequest(char* data, std::size_t bytes_transferred) {
-        boost::asio::post(this->pool, boost::bind(
-            this->handler, data, bytes_transferred,
-            (char*) remote_endpoint_.address().to_string().c_str(),
-            remote_endpoint_.port()
-            )
-        );
-        auto requestUUID = boost::uuids::random_generator()();
-        auto uuidString = boost::lexical_cast<std::string>(requestUUID);
+    void printData(char* data_, std::size_t bytes_transferred) {
+        printf("data: [");
+        for(auto i = 0; i < bytes_transferred; i++) {
+            printf("%d, ", data_[i]);
+        }
+        printf("]\n");
+    }
 
-        printf("request ID: %s | payload size: %lu bytes | from '%s:%d' at %s ", 
-                uuidString.c_str(), 
+    void handleRequest(char* data_, std::size_t bytes_transferred, const char* clientAddress, int clientPort) {
+        boost::asio::post(this->pool, boost::bind(
+            this->handler, data_, bytes_transferred,
+            (char*) clientAddress,
+            clientPort
+        ));
+
+        printf("%s INFO   boost.server | payload size: %lu bytes | from '%s:%d'\n",
+                currentDateTime().c_str(), 
                 bytes_transferred, 
-                remote_endpoint_.address().to_string().c_str(), 
-                remote_endpoint_.port(), currentDateTime().c_str()
+                clientAddress, 
+                clientPort
         );
+        std::flush(std::cout);
     }
 
     void handle_receive(const boost::system::error_code& error, char* data_, std::size_t bytes_transferred) {
         if (error || strcmp(data_, "\n") == 0) {
+            printData(data_, bytes_transferred);
             std::cerr << currentDateTime() << error.category().name() << ':' << error.value();
             return;
         }
-        boost::asio::post(this->pool, boost::bind(&UdpServer::handleRequest, this, data_, bytes_transferred));
+        boost::asio::post(this->pool, boost::bind(&UdpServer::handleRequest, this, data_, 
+            bytes_transferred, remote_endpoint_.address().to_string().c_str(), remote_endpoint_.port()
+        ));
         this->read();
     }
 
     void read() {
-        char data_[2048];
         socket_.async_receive_from(
-            buffer(data_, 2048), remote_endpoint_,
+            buffer(data_, this->bufferSize), remote_endpoint_,
             boost::bind(
                 &UdpServer::handle_receive, this,
                 boost::asio::placeholders::error,
@@ -68,19 +80,27 @@ private:
         );
     }
 
+    int bufferSize = 2048;
+    char* data_;
     boost::asio::thread_pool pool;
     ip::udp::socket socket_;
     ip::udp::endpoint remote_endpoint_;
     void (*handler)(char*, long, char*, int);
 };
 
-void startServerWithHandlerV2(void (*handler)(char*, long, char*, int), int port, int threadCount) {
+void startServerWithHandlerV2(void (*handler)(char*, long, char*, int), int port, int bufferSize, int threadCount) {
     try {
         io_context ctx;
         ip::udp::endpoint endpoint(ip::udp::v4(), port);
         ip::udp::socket socket(ctx, endpoint);
-        UdpServer server(std::move(socket), handler, threadCount);
-        // ctx.run();
+        std::signal(SIGINT, signal_handler);
+        shutdownHandler = [&](int signal) {
+            printf("%s | boost.server | shutting down...goodbye!\n", currentDateTime().c_str());
+            socket.close();
+            exit(0);
+        };
+
+        UdpServer server(std::move(socket), handler, 2048, threadCount);
         std::vector<std::thread> threadGroup;
         for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
             std::thread thread([&ctx]() { ctx.run(); });

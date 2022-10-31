@@ -49,6 +49,19 @@ jobs:
           mkdir -p build
           jextract -I /usr/local/include @jextract_dump.txt include/c_api.h
 
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        with:
+          test-bot: false
+
+      - name: 'install prerequisites'
+        shell: bash
+        run: |
+          brew install gcc
+          brew install conan
+          brew install boost
+
       - name: version
         id: version
         shell: bash
@@ -57,7 +70,7 @@ jobs:
       - name: mvn
         shell: bash
         run: |
-          mvn clean package -Dversion=${{ steps.version.outputs.version }} -Dsrc.dir=src/main/java
+          mvn clean package -Dsrc.dir=src/main/java
 
       - name: 'make release'
         if: github.event_name == 'push'
