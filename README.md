@@ -42,6 +42,8 @@ mkdir -p build && cd build
 conan install --build=missing ..
 cmake .. -DCMAKE_BUILD_TYPE=release
 cmake --build .
+make java-sources
+make jar
 ```
 
 ## How to use it native server
