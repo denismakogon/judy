@@ -11,6 +11,8 @@ else()
 endif()
 
 add_definitions("-std=c++14")
+add_compile_options(-pthread)
+
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
