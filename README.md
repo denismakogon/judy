@@ -42,6 +42,8 @@ mkdir -p build && cd build
 conan install --build=missing ..
 cmake .. -DCMAKE_BUILD_TYPE=release
 cmake --build .
+make java-sources
+make jar
 ```
 
 ## How to use it native server
@@ -82,27 +84,16 @@ see [main.cc](src/main.cc) for more details.
 
 ```cpp
 #include <iostream>
-#include <unistd.h>
-#include <cstring>
 #include <thread>
 
 #include "server.h"
 
-const std::string currentDateTime() {
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-    tstruct = *localtime(&now);
-    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
-    return buf;
-}
-
-void printRequest(char*) {
-    puts(currentDateTime().c_str());
+void printRequest(char*, long bytesTransferred, char* host, int port) {
+    printf("a new packet from %s:%d of %ld bytes received!\n", host, port, bytesTransferred);
     std::flush(std::cout);
 }
 
 int main() {
-    startServerWithHandlerV2(&printRequest, 20777, std::thread::hardware_concurrency());
+    startServerWithHandlerV2(&printRequest, 20777, 2048, std::thread::hardware_concurrency());
 }
 ```
