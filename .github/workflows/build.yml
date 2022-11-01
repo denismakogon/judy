@@ -79,7 +79,7 @@ jobs:
       - name: version
         id: version
         shell: bash
-        run: echo "version_var=$(date +'%Y.%m.%d')" >> $GITHUB_OUTPUT
+        run: echo "version_var=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
 
       - name: mvn
         shell: bash
