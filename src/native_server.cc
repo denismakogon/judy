@@ -8,6 +8,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <arpa/inet.h>
+#include <functional>
 
 #include "structs.h"
 #include "timestamp.h"
