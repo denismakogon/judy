@@ -6,20 +6,13 @@
 #include <boost/asio.hpp>
 #include <boost/thread.hpp>
 
+#include "timestamp.h"
+
 using namespace boost::asio;
 
 namespace {
-std::function<void(int)> shutdownHandler;
-void signal_handler(int signal) { shutdownHandler(signal); }
-}
-
-const std::string currentDateTime() {
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-    tstruct = *localtime(&now);
-    strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
-    return buf;
+    std::function<void(int)> shutdownHandler;
+    void signal_handler(int signal) { shutdownHandler(signal); }
 }
 
 struct UdpServer {
@@ -88,7 +81,7 @@ private:
     void (*handler)(char*, long, char*, int);
 };
 
-void startServerWithHandlerV2(void (*handler)(char*, long, char*, int), int port, int bufferSize, int threadCount) {
+void startBoostServerWithHandler(void (*handler)(char*, long, char*, int), int port, int bufferSize, int threadCount) {
     try {
         io_context ctx;
         ip::udp::endpoint endpoint(ip::udp::v4(), port);

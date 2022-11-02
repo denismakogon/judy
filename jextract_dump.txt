@@ -2,7 +2,6 @@
 
 --source -t judy.server
 -I include/
---include-struct udpRequest
 --include-function nativeServerWithHandler
 --include-function boostServerWithHandler
 --output src/main/java

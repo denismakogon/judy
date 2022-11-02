@@ -10,22 +10,31 @@
 #include <arpa/inet.h>
 
 #include "structs.h"
+#include "timestamp.h"
 
-int fd = 0;
-
-void sig_handler(int signo) {
-    if (signo == SIGINT) {
-        std::cout << "\t Exiting..." << '\n';
-        close(fd);
-        exit(1);
+namespace {
+    std::function<void(char*, long, char*, int)> upcallRequestDataHandler;
+    void* requestHandler(void* data) { 
+        udpRequest rq = *((udpRequest*) data);
+        printf("%s INFO   boost.server.udp | payload size: %d bytes | from '%s:%d'\n",
+            currentDateTime().c_str(),
+            rq.bytesReceived,
+            inet_ntoa(rq.clientaddr.sin_addr),
+            ntohs(rq.clientaddr.sin_port)
+        );
+        upcallRequestDataHandler(rq.data, rq.bytesReceived, inet_ntoa(rq.clientaddr.sin_addr), ntohs(rq.clientaddr.sin_port));
+        return NULL;
     }
+
+    std::function<void(int)> shutdownHandler;
+    void signal_handler(int signal) { shutdownHandler(signal); }
 }
 
-int startServerWithHandler(void* (*handler)(void*), int port, int bufferSize, int threadCount) {
+int startNativeServerWithHandler(void (*handler)(char*, long, char*, int), int port, int bufferSize, int threadCount) {
     pthread_t threads[threadCount];
-    int threadno = 0, fd;
+    int threadno = 0, fd = 0;
 
-    std::cout << "starting UDP server...\n";
+    printf("%s INFO   native.server.udp | starting native UDP server", currentDateTime().c_str());
     sockaddr_in serveraddr;
     sockaddr_in clientaddr;
 
@@ -35,10 +44,10 @@ int startServerWithHandler(void* (*handler)(void*), int port, int bufferSize, in
 
     /* Create socket */
     if ((fd = socket (AF_INET, SOCK_DGRAM, 0)) == -1) {
-        std::cout << "Socket creation failed...\n\t Exiting..." << '\n';
+        std::cerr << "socket creation failed, exiting..." << std::endl;
         return 0;
     }
-    std::cout << "socket allocated...\n";
+    printf("%s INFO   native.server.udp | socket allocated\n", currentDateTime().c_str());
 
     memset ((sockaddr*)&serveraddr, 0, sizeof (serveraddr));
     serveraddr.sin_family = AF_INET;
@@ -46,24 +55,33 @@ int startServerWithHandler(void* (*handler)(void*), int port, int bufferSize, in
     serveraddr.sin_port = htons (port);
 
     if (bind (fd, (sockaddr*)&serveraddr, sizeof (serveraddr)) == -1) {
-        std::cout << "Binding failed... Exiting..." << '\n';
+        std::cerr << "Binding failed... exiting..." << std::endl;
         return 0;
     }
 
-    signal(SIGINT, sig_handler);
-    signal(SIGTSTP, sig_handler);
+    signal(SIGINT, signal_handler);
+    signal(SIGTSTP, signal_handler);
+    shutdownHandler = [&](int signo) {
+        printf("%s INFO   native.server.udp | shutting down...\n", currentDateTime().c_str());
+        close(fd);
+        exit(signo);
+    };
 
-    std::cout << "listening on 0.0.0.0:" << port << "...\n";
+    upcallRequestDataHandler = [&](char* data, long bytesReceived, char* clientAddress, int port) {
+        handler(data, bytesReceived, clientAddress, port);
+    };
+
+    printf("%s INFO   native.server.udp | listening on 0.0.0.0:%d\n", currentDateTime().c_str(), port);
     while (1) {
         recvlen = recvfrom (fd, buf, bufferSize, 0, (sockaddr*) &clientaddr, &addrlen);
-        udpRequest *r = new udpRequest;
-        bzero (r, sizeof (udpRequest));
-        r->bytesReceived = recvlen;
-        r->addlen = addrlen;
-        r->clientaddr = clientaddr;
-        r->des = fd;
-        strcpy (r->data, buf);
-        pthread_create(&threads[threadno++], NULL, handler, (void*) r);
+        udpRequest *req = new udpRequest;
+        bzero (req, sizeof (udpRequest));
+        req->bytesReceived = recvlen;
+        req->addlen = addrlen;
+        req->clientaddr = clientaddr;
+        req->des = fd;
+        strcpy (req->data, buf);
+        pthread_create(&threads[threadno++], NULL, requestHandler, (void*) req);
         if (threadno == threadCount)
             threadno = 0;
         memset (buf, 0, sizeof (buf));
