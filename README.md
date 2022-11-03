@@ -82,3 +82,101 @@ int main() {
     startBoostServerWithHandler(&printRequest, 20777, 2048, std::thread::hardware_concurrency());
 }
 ```
+
+## How to use these servers from Java
+
+`src/main/java/com/boost/server/BoostServer.java`
+```java
+package com.boost.server;
+
+import java.lang.foreign.*;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+
+
+public class BoostServer implements AutoClosable {
+
+    static final Linker linker = Linker.nativeLinker();
+    MemorySession memorySession = MemorySession.openShared();
+    MemorySegment handlerSegment;
+    static {
+        try {
+            System.load(System.getProperty("boost.server.library"));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    private static final SymbolLookup linkerLookup = linker.defaultLookup();
+    private static final SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
+    private static final SymbolLookup lookup = name ->
+            loaderLookup.lookup(name).or(() -> linkerLookup.lookup(name));
+
+    public BoostServer() throws Exception {
+        var requestHandlerMH = MethodHandles.lookup().findVirtual(
+                BoostServer.class, "requestHandler",
+                MethodType.methodType(
+                        void.class,
+                        MemoryAddress.class, long.class,
+                        MemoryAddress.class, int.class
+                )
+        ).bindTo(this);
+        handlerSegment = linker.upcallStub(
+                requestHandlerMH,
+                FunctionDescriptor.ofVoid(
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT
+                ),
+                memorySession
+        );
+    }
+
+    @Override
+    public void build() throws Exception {
+        var serverHandle = lookup.lookup("boostServerWithHandler").map(
+                address -> linker.downcallHandle(address, FunctionDescriptor.ofVoid(
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT
+                ))
+        ).orElseThrow();
+        try {
+            serverHandle.invoke(
+                    handlerSegment.address(),
+                    configuration.port,
+                    configuration.bufferSize,
+                    Integer.parseInt(System.getProperty("boost.threadpool.size", "1000"))
+            );
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void requestHandler(MemoryAddress dataPtr, long ignoredBytesTransferred, MemoryAddress clientHost, int clientPort) {
+        var data = MemorySegment.ofAddress(dataPtr, configuration.bufferSize, memorySession)
+                .toArray(ValueLayout.JAVA_BYTE);
+        var client = new String(MemorySegment.ofAddress(clientHost, 9, memorySession)
+                .toArray(ValueLayout.JAVA_BYTE), StandardCharsets.UTF_8);
+        System.out.println(String.format("a new packet from %s:%d of %d bytes received!",
+                    client, clientPort, data.length));
+    }
+
+    @Override
+    public void close() throws Exception {
+        memorySession.close();
+    }
+}
+```
+
+`src/main/java/com/boost/server/Main.java`:
+```java
+public Main {
+    public static void main(String[] args) {
+        try(var server = new BoostServer()) {
+            server.build();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+```
