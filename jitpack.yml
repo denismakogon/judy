@@ -1,5 +1,5 @@
 before_install:
-   - sdk install java 19-open
+   - sdk install java 21-open
 install:
 - PROJECT=judy
 - version=$(date +'%Y.%m.%d')

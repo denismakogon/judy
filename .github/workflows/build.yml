@@ -21,7 +21,7 @@ jobs:
         uses: oracle-actions/setup-java@v1
         with:
           install: false
-          uri: https://download.java.net/java/early_access/jextract/2/openjdk-19-jextract+2-3_${{ matrix.TARGET }}-x64_bin.tar.gz
+          uri: https://download.java.net/java/early_access/jextract/1/openjdk-21-jextract+1-2_${{ matrix.TARGET }}-x64_bin.tar.gz
 
       - name: 'Extract jextract'
         shell: sh
@@ -30,12 +30,12 @@ jobs:
           tar --strip-components=1 -xvf ${{ steps.jextract.outputs.archive }} -C /tmp/jextract
           export PATH=${PATH}:/tmp/jextract/bin
 
-      - name: 'Download JDK 19'
-        id: jdk_19
+      - name: 'Install OracleJDK GA'
+        id: jdk_21
         uses: oracle-actions/setup-java@v1
         with:
-          website: jdk.java.net
-          release: 19
+          website: oracle.com
+          release: 21
 
       - name: 'Check out repository'
         uses: actions/checkout@v3
