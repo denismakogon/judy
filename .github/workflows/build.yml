@@ -99,7 +99,7 @@ jobs:
           repo_token: ${{ secrets.GH_RELEASE_TOKEN }}
           automatic_release_tag: ${{ env.version_var }}
           prerelease: false
-          title: CPP UDP server ${{ env.version_var }}
+          title: Judy C++ UDP server ${{ env.version_var }} for Java
           files: |
             LICENSE
             target/*.jar
