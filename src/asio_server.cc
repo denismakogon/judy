@@ -40,11 +40,11 @@ private:
             clientPort
         ));
 
-        printf("%s INFO   boost.server.udp | payload size: %lu bytes | from '%s:%d'\n",
-                currentDateTime().c_str(), 
-                bytes_transferred, 
+        printf("%s [INFO] passing UDP request to judy.server.udp[%s:%d] foreign handler | payload size: %lu bytes\n",
+                currentDateTime().c_str(),
                 clientAddress, 
-                clientPort
+                clientPort,
+                bytes_transferred 
         );
         std::flush(std::cout);
     }
@@ -55,9 +55,17 @@ private:
             std::cerr << currentDateTime() << error.category().name() << ':' << error.value();
             return;
         }
+        printf("%s [INFO] a new request to judy.server.udp[%s:%d] received | payload size: %lu bytes\n",
+            currentDateTime().c_str(),
+            remote_endpoint_.address().to_string().c_str(), 
+            remote_endpoint_.port(),
+            bytes_transferred 
+        );
+        std::flush(std::cout);
         boost::asio::post(this->pool, boost::bind(&UdpServer::handleRequest, this, data_, 
             bytes_transferred, remote_endpoint_.address().to_string().c_str(), remote_endpoint_.port()
         ));
+        printf("%s [INFO] waiting for a new request", currentDateTime().c_str());
         this->read();
     }
 
