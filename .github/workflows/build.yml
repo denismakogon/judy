@@ -64,8 +64,9 @@ jobs:
       - name: conan profile
         shell: bash
         run: |
+          conan version
           conan profile detect
-          cat ~/.conan/profiles/default
+          cat ~/.conan2/profiles/default
           conan profile update settings.compiler=gcc default
           conan profile update settings.compiler.version=11 default
           conan profile update settings.compiler.libcxx=libstdc++11 default
