@@ -16,12 +16,17 @@ jobs:
           - os: ubuntu-22.04
             TARGET: linux
     steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
       - name: 'Download jextract'
         id: jextract
         uses: oracle-actions/setup-java@v1
         with:
           install: false
-          uri: https://download.java.net/java/early_access/jextract/2/openjdk-19-jextract+2-3_${{ matrix.TARGET }}-x64_bin.tar.gz
+          uri: https://download.java.net/java/early_access/jextract/1/openjdk-21-jextract+1-2_${{ matrix.TARGET }}-x64_bin.tar.gz
 
       - name: 'Extract jextract'
         shell: sh
@@ -30,17 +35,12 @@ jobs:
           tar --strip-components=1 -xvf ${{ steps.jextract.outputs.archive }} -C /tmp/jextract
           export PATH=${PATH}:/tmp/jextract/bin
 
-      - name: 'Download JDK 19'
-        id: jdk_19
+      - name: 'Install OracleJDK GA'
+        id: jdk_21
         uses: oracle-actions/setup-java@v1
         with:
-          website: jdk.java.net
-          release: 19
-
-      - name: 'Check out repository'
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
+          website: oracle.com
+          release: 21
 
       - name: prepare-project
         shell: bash
@@ -64,16 +64,14 @@ jobs:
       - name: conan profile
         shell: bash
         run: |
-          conan profile new default --detect
-          cat ~/.conan/profiles/default
-          conan profile update settings.compiler=gcc default
-          conan profile update settings.compiler.version=11 default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
-          conan profile update env.CC=/usr/bin/clang default
-          conan profile update env.CXX=/usr/bin/clang++ default
-          mkdir -p build && cd build
-          conan install --build=missing ..
-          cmake .. -DCMAKE_BUILD_TYPE=release
+          conan profile detect
+          conan version
+          cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
+          conan profile show
+          mkdir -p build
+          conan install . --output-folder=build --build=missing
+          cd build
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
 
       - name: version
@@ -101,7 +99,7 @@ jobs:
           repo_token: ${{ secrets.GH_RELEASE_TOKEN }}
           automatic_release_tag: ${{ env.version_var }}
           prerelease: false
-          title: CPP UDP server ${{ env.version_var }}
+          title: Judy C++ UDP server ${{ env.version_var }} for Java
           files: |
             LICENSE
             target/*.jar
