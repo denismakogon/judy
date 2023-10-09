@@ -38,10 +38,12 @@ If you're on something else like `linux` or `x86_64` arch, please following [the
 ## How to build
 
 ```shell
-mkdir -p build && cd build
-conan install --build=missing ..
-cmake .. -DCMAKE_BUILD_TYPE=release
+mkdir -p build
+conan install . --output-folder=build --build=missing
+cd build
+cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 cmake --build .
+
 make java-sources
 make jar
 ```
@@ -89,37 +91,39 @@ int main() {
 ```java
 package com.boost.server;
 
-import java.lang.foreign.*;
+import java.lang.foreign.Arena;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Objects;
+import java.util.logging.Logger;
 
+import static judy.server.c_api_h.boostServerWithHandler;
 
 public class BoostServer implements AutoClosable {
 
-    static final Linker linker = Linker.nativeLinker();
-    MemorySession memorySession = MemorySession.openShared();
-    MemorySegment handlerSegment;
     static {
         try {
-            System.load(System.getProperty("boost.server.library"));
+            System.load(System.getProperty("judy.server.lib"));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
-    private static final SymbolLookup linkerLookup = linker.defaultLookup();
-    private static final SymbolLookup loaderLookup = SymbolLookup.loaderLookup();
-    private static final SymbolLookup lookup = name ->
-            loaderLookup.lookup(name).or(() -> linkerLookup.lookup(name));
+
+    static final Linker linker = Linker.nativeLinker();
+    static final Arena sharedArena = Arena.ofAuto();
+    static MemorySegment handlerSegment = null;
 
     public BoostServer() throws Exception {
+        Objects.requireNonNull(configuration);
+        this.configuration = configuration;
         var requestHandlerMH = MethodHandles.lookup().findVirtual(
                 BoostServer.class, "requestHandler",
                 MethodType.methodType(
                         void.class,
-                        MemoryAddress.class, long.class,
-                        MemoryAddress.class, int.class
+                        MemorySegment.class, long.class,
+                        MemorySegment.class, int.class
                 )
         ).bindTo(this);
         handlerSegment = linker.upcallStub(
@@ -128,43 +132,37 @@ public class BoostServer implements AutoClosable {
                         ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
                         ValueLayout.ADDRESS, ValueLayout.JAVA_INT
                 ),
-                memorySession
+                sharedArena
         );
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                close();
+            } catch (Exception _) {
+            }
+        }));
     }
 
-    @Override
-    public void build() throws Exception {
-        var serverHandle = lookup.lookup("boostServerWithHandler").map(
-                address -> linker.downcallHandle(address, FunctionDescriptor.ofVoid(
-                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
-                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT
-                ))
-        ).orElseThrow();
-        try {
-            serverHandle.invoke(
-                    handlerSegment.address(),
-                    configuration.port,
-                    configuration.bufferSize,
-                    Integer.parseInt(System.getProperty("boost.threadpool.size", "1000"))
-            );
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void requestHandler(MemoryAddress dataPtr, long ignoredBytesTransferred, MemoryAddress clientHost, int clientPort) {
-        var data = MemorySegment.ofAddress(dataPtr, configuration.bufferSize, memorySession)
+    void requestHandler(MemorySegment dataPtr, long bytesTransferred,
+                        MemorySegment clientHost, int clientPort) {
+        logger.info(String.format("[%s] a new request", getClass().getName()));
+        var data = dataPtr.reinterpret(2048, sharedArena, null)
                 .toArray(ValueLayout.JAVA_BYTE);
-        var client = new String(MemorySegment.ofAddress(clientHost, 9, memorySession)
+        var client = new String(clientHost.reinterpret(9, sharedArena, null)
                 .toArray(ValueLayout.JAVA_BYTE), StandardCharsets.UTF_8);
-        System.out.println(String.format("a new packet from %s:%d of %d bytes received!",
-                    client, clientPort, data.length));
+        System.out.printf("a new packet from %s:%d of %d bytes received!\n",
+                client, clientPort, bytesTransferred);
+
+    }
+
+    public void build() {
+        boostServerWithHandler(handlerSegment, 20777, 2048, 100);
     }
 
     @Override
-    public void close() throws Exception {
-        memorySession.close();
+    public void close() {
+        sharedArena.close();
     }
+    
 }
 ```
 

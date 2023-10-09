@@ -7,14 +7,73 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-latest, macos-latest]
         include:
-          - os: ubuntu-22.04
+          - os: ubuntu-latest
             TARGET: linux
+            PLATFORM: x64
+            LIB_EXT: so
+          - os: macos-latest
+            TARGET: macos
+            PLATFORM: x64
+            LIB_EXT: dylib
+    steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        with:
+          test-bot: false
+
+      - name: install prerequisites
+        shell: bash
+        run: |
+          brew install gcc
+          brew install conan
+
+      - name: conan-profile
+        shell: bash
+        run: |
+          conan profile detect
+          conan version
+          cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
+          conan profile show
+
+      - name: conan-install
+        shell: bash
+        run: |
+          mkdir -p build
+          conan install . --output-folder=build --build=missing
+          cd build
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          cmake --build .
+
+      - name: artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: libjudy.${{ matrix.LIB_EXT }}
+          path: build/libjudy.${{ matrix.LIB_EXT }}
+          retention-days: 1
+
+  package:
+    needs:
+      - build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        include:
+          - os: ubuntu-latest
+            TARGET: linux
+            PLATFORM: x64
     steps:
       - name: 'Check out repository'
         uses: actions/checkout@v3
@@ -49,42 +108,58 @@ jobs:
           mkdir -p build
           jextract -I /usr/local/include @jextract_dump.txt include/c_api.h
 
+      - name: version
+        id: version
+        shell: bash
+        run: echo "version_var=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
         with:
           test-bot: false
 
-      - name: 'install prerequisites'
+      - name: install prerequisites
         shell: bash
         run: |
           brew install gcc
           brew install conan
 
-      - name: conan profile
+      - name: conan-profile
         shell: bash
         run: |
           conan profile detect
           conan version
           cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
           conan profile show
+
+      - name: conan-install
+        shell: bash
+        run: |
           mkdir -p build
           conan install . --output-folder=build --build=missing
           cd build
           cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
-          cmake --build .
 
-      - name: version
-        id: version
-        shell: bash
-        run: echo "version_var=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
-
-      - name: mvn
+      - name: java sources
         shell: bash
         run: |
           export PATH=${PATH}:/tmp/jextract/bin
           cd build
           make java-sources
+          mkdir src/main/resources
+
+      - name: libjudy.so
+        uses: actions/download-artifact@v3
+        with:
+          name: libjudy.so
+          path: build/src/main/resources
+
+      - name: libjudy.dylib
+        uses: actions/download-artifact@v3
+        with:
+          name: libjudy.dylib
+          path: build/src/main/resources
 
       - name: jar
         shell: bash
