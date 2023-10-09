@@ -64,8 +64,10 @@ jobs:
       - name: conan profile
         shell: bash
         run: |
+          conan profile detect
           conan version
-          conan install . --profile .github/conan2/${{ matrix.TARGET }}_default
+          cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
+          conan profile show
           mkdir -p build && cd build
           conan install --build=missing ..
           cmake .. -DCMAKE_BUILD_TYPE=release
