@@ -46,7 +46,7 @@ make java-sources
 make jar
 ```
 
-## How to use it native server
+## How to use C UDP server
 
 ```cpp
 #include "server.h"
@@ -65,7 +65,7 @@ int main(int argc, char const *argv[]) {
 see [main.cc](src/main.cc) for more details.
 
 
-## How to use it Boost::Asio server
+## How to use Boost::Asio server
 
 ```cpp
 #include <iostream>
