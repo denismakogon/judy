@@ -38,10 +38,12 @@ If you're on something else like `linux` or `x86_64` arch, please following [the
 ## How to build
 
 ```shell
-mkdir -p build && cd build
-conan install --build=missing ..
-cmake .. -DCMAKE_BUILD_TYPE=release
+mkdir -p build
+conan install . --output-folder=build --build=missing
+cd build
+cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 cmake --build .
+
 make java-sources
 make jar
 ```
