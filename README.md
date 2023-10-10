@@ -10,7 +10,7 @@ Make you have the following tools installed:
 
 ### Conan profile
 
-For macOS M1 you need the following profile (`~/.conan/profiles/default`):
+For macOS M1 you need the following profile (`~/.conan2/profiles/default`):
 ```text
 [settings]
 os=Macos
