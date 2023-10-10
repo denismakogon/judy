@@ -26,7 +26,7 @@ struct UdpServer {
 private:
 
     void printData(char* data_, std::size_t bytes_transferred) {
-        printf("data: [");
+        printf("%s [INFO] data: [", currentDateTime().c_str());
         for(auto i = 0; i < bytes_transferred; i++) {
             printf("%d, ", data_[i]);
         }
@@ -51,8 +51,8 @@ private:
 
     void handle_receive(const boost::system::error_code& error, char* data_, std::size_t bytes_transferred) {
         if (error || strcmp(data_, "\n") == 0) {
+            printf("%s [ERROR] error occured: %s, %d\n", currentDateTime().c_str(), error.category().name(), error.value());
             printData(data_, bytes_transferred);
-            std::cerr << currentDateTime() << error.category().name() << ':' << error.value();
             return;
         }
         printf("%s [INFO] a new request to judy.server.udp[%s:%d] received | payload size: %lu bytes\n",
@@ -65,7 +65,7 @@ private:
         boost::asio::post(this->pool, boost::bind(&UdpServer::handleRequest, this, data_, 
             bytes_transferred, remote_endpoint_.address().to_string().c_str(), remote_endpoint_.port()
         ));
-        printf("%s [INFO] waiting for a new request", currentDateTime().c_str());
+        printf("%s [INFO] waiting for a new request\n", currentDateTime().c_str());
         this->read();
     }
 
@@ -96,7 +96,7 @@ void startBoostServerWithHandler(void (*handler)(char*, long, char*, int), int p
         ip::udp::socket socket(ctx, endpoint);
         std::signal(SIGINT, signal_handler);
         shutdownHandler = [&](int signal) {
-            printf("%s INFO   boost.server.udp | shutting down...goodbye!\n", currentDateTime().c_str());
+            printf("%s [INFO] boost.server.udp | shutting down...goodbye!\n", currentDateTime().c_str());
             socket.close();
             exit(0);
         };
