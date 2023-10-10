@@ -60,7 +60,7 @@ void printRequest(char*, long bytesTransferred, char* host, int port) {
 }
 
 int main(int argc, char const *argv[]) {
-    return startNativeServerWithHandler(printRequest, 20777, 2048, 1000);
+    return startNativeServer(printRequest, 20777, 2048, 1000);
 }
 ```
 
@@ -81,7 +81,7 @@ void printRequest(char*, long bytesTransferred, char* host, int port) {
 }
 
 int main() {
-    startBoostServerWithHandler(&printRequest, 20777, 2048, std::thread::hardware_concurrency());
+    startBoostServer(&printRequest, 20777, 2048, std::thread::hardware_concurrency());
 }
 ```
 
