@@ -2,6 +2,6 @@
 
 --source -t judy.server
 -I include/
---include-function nativeServerWithHandler
---include-function boostServerWithHandler
+--include-function nativeServer
+--include-function boostServer
 --output src/main/java

@@ -106,7 +106,7 @@ jobs:
         run: |
           export PATH=${PATH}:/tmp/jextract/bin
           mkdir -p build
-          jextract -I /usr/local/include @jextract_dump.txt include/c_api.h
+          jextract -I /usr/local/include @jextract_dump.txt include/api.h
 
       - name: version
         id: version
