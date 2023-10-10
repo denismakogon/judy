@@ -171,6 +171,10 @@ jobs:
           cd build
           make jar
 
+      - name: jar tf
+        run: jar tf ../target/judy*.jar
+        working-directory: build/
+
       - name: 'make release'
         if: github.event_name == 'push'
         uses: marvinpinto/action-automatic-releases@latest
