@@ -10,5 +10,5 @@ void printRequest(char*, long bytesTransferred, char* host, int port) {
 }
 
 int main() {
-    startBoostServerWithHandler(&printRequest, 20777, 2048, std::thread::hardware_concurrency());
+    startBoostServer(&printRequest, 20777, 2048, std::thread::hardware_concurrency());
 }

@@ -31,7 +31,7 @@ namespace {
     void signal_handler(int signal) { shutdownHandler(signal); }
 }
 
-int startNativeServerWithHandler(void (*handler)(char*, long, char*, int), int port, int bufferSize, int threadCount) {
+int startNativeServer(void (*handler)(char*, long, char*, int), int port, int bufferSize, int threadCount) {
     pthread_t threads[threadCount];
     int threadno = 0, fd = 0;
 

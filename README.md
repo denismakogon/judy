@@ -1,11 +1,11 @@
 [![](https://jitpack.io/v/denismakogon/judy.svg)](https://jitpack.io/#denismakogon/judy)
 
-# Multithreaded CPP UDP server consumable through the C ABI consumption
+# Multithreaded C++ UDP server for Java
 
 ## Prerequisites
 
 Make you have the following tools installed:
-- [conan](https://conan.io/)
+- [conan2](https://conan.io/)
 - [jextract](https://jdk.java.net/jextract/)
 
 ### Conan profile

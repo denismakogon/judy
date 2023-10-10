@@ -89,7 +89,7 @@ private:
     void (*handler)(char*, long, char*, int);
 };
 
-void startBoostServerWithHandler(void (*handler)(char*, long, char*, int), int port, int bufferSize, int threadCount) {
+void startBoostServer(void (*handler)(char*, long, char*, int), int port, int bufferSize, int threadCount) {
     try {
         io_context ctx;
         ip::udp::endpoint endpoint(ip::udp::v4(), port);
