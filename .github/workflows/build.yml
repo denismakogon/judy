@@ -153,13 +153,17 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: libjudy.so
-          path: build/src/main/resources
+          path: build/src/main/resources/libjudy.so
 
       - name: libjudy.dylib
         uses: actions/download-artifact@v3
         with:
           name: libjudy.dylib
-          path: build/src/main/resources
+          path: build/src/main/resources/libjudy.dylib
+
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: build/src/main/resources
 
       - name: jar
         shell: bash
