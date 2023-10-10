@@ -15,7 +15,7 @@
     </licenses>
 
     <properties>
-        <src.dir>build/src/main/java</src.dir>
+        <src.dir>build/src</src.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -52,6 +52,14 @@
                 <plugin>
                     <artifactId>maven-resources-plugin</artifactId>
                     <version>3.3.1</version>
+                    <configuration>
+                        <resources>
+                            <resource>
+                                <directory>${basedir}/${src.dir}/main/resources</directory>
+                                <filtering>false</filtering>
+                            </resource>
+                        </resources>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
