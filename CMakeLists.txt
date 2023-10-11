@@ -36,5 +36,5 @@ add_custom_target(
 
 add_custom_target(
     jar
-    COMMAND mvn -f ${CMAKE_CURRENT_SOURCE_DIR}/pom.xml clean package -Dversion=${JAR_VERSION} -Dsrc.dir=${CMAKE_CURRENT_SOURCE_DIR}/build/src/main/java
+    COMMAND mvn -f ${CMAKE_CURRENT_SOURCE_DIR}/pom.xml clean package -Dversion=${JAR_VERSION} -Dsrc.dir=${CMAKE_CURRENT_SOURCE_DIR}/build/src
 )
