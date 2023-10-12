@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.24)
 
 project(judy LANGUAGES C CXX VERSION 0.0.1 DESCRIPTION "Multithreaded CPP UDP server consumable through the C ABI consumption")
 
+set(CMAKE_OSX_ARCHITECTURES "x86_64")
+
 execute_process(COMMAND date +'%Y.%m.%d' OUTPUT_VARIABLE JAR_VERSION)
 execute_process(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
 
