@@ -27,6 +27,13 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: caching
+        uses: actions/cache@v3
+        id: cmakelists
+        with:
+          path: CMakeLists.txt
+          key: ${{ github.sha }}-${{ github.run_id }}
+
       - name: Set up Homebrew
         id: set-up-homebrew
         uses: Homebrew/actions/setup-homebrew@master
