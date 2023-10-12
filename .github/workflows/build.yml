@@ -16,16 +16,21 @@ jobs:
           - os: ubuntu-latest
             TARGET: linux
             PLATFORM: x64
-            LIB_EXT: so
           - os: macos-latest
             TARGET: macos
             PLATFORM: x64
-            LIB_EXT: dylib
     steps:
       - name: 'Check out repository'
         uses: actions/checkout@v3
         with:
           fetch-depth: 1
+
+      - name: caching
+        uses: actions/cache@v3
+        id: cmakelists
+        with:
+          path: CMakeLists.txt
+          key: ${{ github.sha }}-${{ github.run_id }}
 
       - name: Set up Homebrew
         id: set-up-homebrew
@@ -59,8 +64,8 @@ jobs:
       - name: artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: libjudy.${{ matrix.LIB_EXT }}
-          path: build/libjudy.${{ matrix.LIB_EXT }}
+          name: libjudy.${{ matrix.TARGET }}
+          path: build/libjudy*
           retention-days: 1
 
   package:
@@ -152,13 +157,13 @@ jobs:
       - name: libjudy.so
         uses: actions/download-artifact@v3
         with:
-          name: libjudy.so
+          name: libjudy.linux
           path: build/src/main/resources/lib
 
       - name: libjudy.dylib
         uses: actions/download-artifact@v3
         with:
-          name: libjudy.dylib
+          name: libjudy.macos
           path: build/src/main/resources/lib
 
       - name: Display structure of downloaded files
