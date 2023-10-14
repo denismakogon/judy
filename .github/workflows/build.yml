@@ -68,7 +68,7 @@ jobs:
           mkdir -p build
           conan install . --output-folder=build --build=missing
           cd build
-          cmake .. ${{ matrix.CMAKE_ARGS }} -DCMAKE_BUILD_TYPE=Release
+          cmake .. ${{ matrix.CMAKE_ARGS }} -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
 
       - name: artifacts

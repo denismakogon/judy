@@ -77,6 +77,17 @@ macro(set_linker_flag FLAG)
     endif()
 endmacro()
 
+MACRO(SUBDIRLIST result curdir)
+    FILE(GLOB children ${curdir}/*)
+    SET(dirlist "")
+    FOREACH(child ${children})
+        IF(IS_DIRECTORY ${child})
+            LIST(APPEND dirlist ${child})
+        ENDIF()
+    ENDFOREACH()
+    SET(${result} ${dirlist})
+ENDMACRO()
+
 if(ARCH STREQUAL "x86")
     set_cpp_flag("-m32")
     set_cpp_flag("-msse2")
@@ -91,6 +102,12 @@ if(ARCH STREQUAL "x86_64")
     set_cpp_flag("-mtune=generic")
 endif()
 
+
+SUBDIRLIST(SUBDIRS "$ENV{HOME}/.conan2/p/b/")
+FOREACH(subdir ${SUBDIRS})
+  list(PREPEND CMAKE_LIBRARY_PATH "${subdir}/p/lib")
+  list(PREPEND CMAKE_INCLUDE_PATH "${subdir}/p/include")
+ENDFOREACH()
 
 
 add_definitions("-std=c++14")
