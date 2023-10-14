@@ -15,10 +15,20 @@ jobs:
         include:
           - os: ubuntu-latest
             TARGET: linux
-            PLATFORM: x64
+            PLATFORM: x86_64
+            CMAKE_ARGS: -DCMAKE_SYSTEM_PROCESSOR=x86_64
+          - os: ubuntu-latest
+            TARGET: linux
+            PLATFORM: arm64
+            CMAKE_ARGS: -DCMAKE_SYSTEM_PROCESSOR=aarch64
           - os: macos-latest
             TARGET: macos
-            PLATFORM: x64
+            PLATFORM: x86_64
+            CMAKE_ARGS: -DCMAKE_OSX_ARCHITECTURES=x86_64
+          - os: macos-latest
+            TARGET: macos
+            PLATFORM: arm64
+            CMAKE_ARGS: -DCMAKE_OSX_ARCHITECTURES=arm64
     steps:
       - name: 'Check out repository'
         uses: actions/checkout@v3
@@ -58,14 +68,13 @@ jobs:
           mkdir -p build
           conan install . --output-folder=build --build=missing
           cd build
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
-          cat conan_toolchain.cmake
+          cmake .. ${{ matrix.CMAKE_ARGS }} -DCMAKE_BUILD_TYPE=Release
           cmake --build .
 
       - name: artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: libjudy.${{ matrix.TARGET }}
+          name: libjudy-${{ matrix.PLATFORM }}.${{ matrix.TARGET }}
           path: build/libjudy*
           retention-days: 1
 
@@ -155,17 +164,29 @@ jobs:
           make java-sources
           mkdir src/main/resources
 
-      - name: libjudy.so
+      - name: libjudy-x86_64.linux
         uses: actions/download-artifact@v3
         with:
-          name: libjudy.linux
+          name: libjudy-x86_64.linux
           path: build/src/main/resources/lib
 
-      - name: libjudy.dylib
+      - name: libjudy-x86_64.macos
         uses: actions/download-artifact@v3
         with:
-          name: libjudy.macos
+          name: libjudy-x86_64.macos
           path: build/src/main/resources/lib
+
+      - name: libjudy-arm64.linux
+        uses: actions/download-artifact@v3
+        with:
+          name: libjudy-arm64.linux
+          path: build/src/main/resources/lib
+
+      - name: libjudy-arm64.macos
+        uses: actions/download-artifact@v3
+        with:
+          name: libjudy-arm64.macos
+          path: build/src/main/resources/lib 
 
       - name: Display structure of downloaded files
         run: ls -R
