@@ -22,6 +22,7 @@ jobs:
           path: |
             CMakeLists.txt
             /usr/local/Cellar
+            /Users/runner/.conan2
           key: ${{ github.sha }}-${{ github.run_id }}
 
       - name: Set up Homebrew
@@ -91,6 +92,7 @@ jobs:
           path: |
             CMakeLists.txt
             /home/linuxbrew/.linuxbrew/Cellar
+            /home/runner/.conan2
           key: ${{ github.sha }}-${{ github.run_id }}
 
       - name: Set up Homebrew
@@ -124,7 +126,13 @@ jobs:
           cmake --build .
           file lib*
           cp libjudy* ../libs/
-          rm -fr *
+          rm -fr CMakeFiles/
+
+      - name: aarch64-linux-gnu-gcc
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install gcc-aarch64-linux-gnu
 
       - name: artifacts
         uses: actions/upload-artifact@v3
