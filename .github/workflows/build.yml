@@ -60,11 +60,11 @@ jobs:
           mkdir -p libs
           mkdir -p build
           conan install . --output-folder=build --build=missing
-          cd build
       
       - name: compile x86_64
         shell: bash
         run: |
+          cd build
           cmake .. ${{ matrix.CMAKE_AMD_FLAGS }} -DCMAKE_BUILD_TYPE=Release
           cmake --build .
           cp libjudy* ../libs/
@@ -72,6 +72,7 @@ jobs:
       - name: compile aarch64
         shell: bash
         run: |
+          cd build
           cmake .. ${{ matrix.CMAKE_AARCH_FLAGS }} -DCMAKE_BUILD_TYPE=Release
           cmake --build .
           cp libjudy* ../libs/
