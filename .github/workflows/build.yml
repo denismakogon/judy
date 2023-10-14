@@ -15,12 +15,8 @@ jobs:
         include:
           - os: ubuntu-latest
             TARGET: linux
-            CMAKE_AMD_FLAGS: -DCMAKE_SYSTEM_PROCESSOR=x86_64
-            CMAKE_AARCH_FLAGS: -DCMAKE_SYSTEM_PROCESSOR=aarch64
           - os: macos-latest
             TARGET: macos
-            CMAKE_AMD_FLAGS: -DCMAKE_OSX_ARCHITECTURES=x86_64
-            CMAKE_AARCH_FLAGS: -DCMAKE_OSX_ARCHITECTURES=arm64
     steps:
       - name: 'Check out repository'
         uses: actions/checkout@v3
@@ -65,7 +61,8 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. ${{ matrix.CMAKE_AMD_FLAGS }} -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          cp ../toolchains/${{matrix.TARGET}}-x86_64.cmake conan_toolchain.cmake
+          cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
           file lib*
           cp libjudy* ../libs/
@@ -74,7 +71,8 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. ${{ matrix.CMAKE_AARCH_FLAGS }} -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          cp ../toolchains/${{matrix.TARGET}}-aarch64.cmake conan_toolchain.cmake
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
           file lib*
           cp libjudy* ../libs/
