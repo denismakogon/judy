@@ -67,6 +67,7 @@ jobs:
           cd build
           cmake .. ${{ matrix.CMAKE_AMD_FLAGS }} -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
+          file lib*
           cp libjudy* ../libs/
 
       - name: compile aarch64
@@ -75,6 +76,7 @@ jobs:
           cd build
           cmake .. ${{ matrix.CMAKE_AARCH_FLAGS }} -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
+          file lib*
           cp libjudy* ../libs/
 
       - name: artifacts
