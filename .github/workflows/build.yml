@@ -49,33 +49,32 @@ jobs:
           conan version
           cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
           conan profile show
-
-      - name: conan-install
-        shell: bash
-        run: |
           mkdir -p libs
           mkdir -p build
-          conan install . --output-folder=build --build=missing
-      
+
       - name: compile x86_64
         shell: bash
         run: |
+          conan install . --output-folder=build --build=missing
           cd build
           cp ../toolchains/${{matrix.TARGET}}-x86_64.cmake conan_toolchain.cmake
-          cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          LIB_SUFFIX="-${{matrix.TARGET}}-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
           file lib*
           cp libjudy* ../libs/
+          rm -fr *
 
       - name: compile aarch64
         shell: bash
         run: |
+          conan install . --output-folder=build --build=missing
           cd build
           cp ../toolchains/${{matrix.TARGET}}-aarch64.cmake conan_toolchain.cmake
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          LIB_SUFFIX="-${{matrix.TARGET}}-aarch64" cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
           file lib*
           cp libjudy* ../libs/
+          rm -fr *
 
       - name: artifacts
         uses: actions/upload-artifact@v3

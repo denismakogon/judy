@@ -33,7 +33,7 @@ endif()
 
 
 # Set the architectures for which to build.
-set(CMAKE_OSX_ARCHITECTURES arm64 CACHE STRING "" FORCE)
+set(CMAKE_OSX_ARCHITECTURES x86_64 CACHE STRING "" FORCE)
 # Setting CMAKE_OSX_SYSROOT SDK, when using Xcode generator the name is enough
 # but full path is necessary for others
 set(CMAKE_OSX_SYSROOT macosx CACHE STRING "" FORCE)
