@@ -7,19 +7,78 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            TARGET: linux
-          - os: macos-latest
-            TARGET: macos
+  # build-on-macos:
+    # runs-on: macos-latest
+    # steps:
+    #   - name: 'Check out repository'
+    #     uses: actions/checkout@v4
+    #     with:
+    #       fetch-depth: 1
+
+    #   - name: caching
+    #     uses: actions/cache@v3
+    #     id: cmakelists
+    #     with:
+    #       path: CMakeLists.txt
+    #       key: ${{ github.sha }}-${{ github.run_id }}
+
+    #   - name: Set up Homebrew
+    #     id: set-up-homebrew
+    #     uses: Homebrew/actions/setup-homebrew@master
+    #     with:
+    #       test-bot: false
+
+    #   - name: install prerequisites
+    #     shell: bash
+    #     run: |
+    #       brew install gcc
+    #       brew install conan
+
+    #   - name: conan-profile
+    #     shell: bash
+    #     run: |
+    #       conan profile detect
+    #       conan version
+    #       cp .github/conan2/macos_default ~/.conan2/profiles/default
+    #       conan profile show
+    #       mkdir -p libs
+    #       mkdir -p build
+
+    #   - name: compile x86_64
+    #     shell: bash
+    #     run: |
+    #       conan install . --output-folder=build --build=missing
+    #       cd build
+    #       cp ../toolchains/macos-x86_64.cmake conan_toolchain.cmake
+    #       LIB_SUFFIX="-macos-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+    #       cmake --build .
+    #       file lib*
+    #       cp libjudy* ../libs/
+    #       rm -fr *
+
+    #   - name: compile aarch64
+    #     shell: bash
+    #     run: |
+    #       conan install . --output-folder=build --build=missing
+    #       cd build
+    #       cp ../toolchains/macos-aarch64.cmake conan_toolchain.cmake
+    #       LIB_SUFFIX="-macos-aarch64" cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+    #       cmake --build .
+    #       file lib*
+    #       cp libjudy* ../libs/
+    #       rm -fr *
+
+    #   - name: artifacts
+    #     uses: actions/upload-artifact@v3
+    #     with:
+    #       name: libjudy-macos
+    #       path: libs/libjudy*
+    #       retention-days: 1
+
+  build-on-linux:
+    runs-on: ubuntu-latest
     steps:
-      - name: 'Check out repository'
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
@@ -27,8 +86,39 @@ jobs:
         uses: actions/cache@v3
         id: cmakelists
         with:
-          path: CMakeLists.txt
+          path: |
+            CMakeLists.txt
+            /usr/local/Cellar
           key: ${{ github.sha }}-${{ github.run_id }}
+
+      - uses: uraimo/run-on-arch-action@master
+        name: Run commands
+        id: aarch64
+        with:
+          arch: aarch64
+          distro: ubuntu-latest
+          githubToken: ${{ github.token }}
+          shell: /bin/sh
+          setup: |
+            mkdir -p "${PWD}/libs"
+          dockerRunArgs: |
+            --volume "${PWD}/libs:/libs"
+          install:
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            brew install gcc conan
+            conan profile detect
+            conan version
+            conan profile show
+          run: |
+            mkdir -p libs
+            mkdir -p build
+            conan install . --output-folder=build --build=missing
+            cd build
+            cp ../toolchains/linux-aarch64.cmake conan_toolchain.cmake
+            LIB_SUFFIX="-linux-aarch64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+            cmake --build .
+            file lib*
+            cp libjudy* /libs/
 
       - name: Set up Homebrew
         id: set-up-homebrew
@@ -47,7 +137,7 @@ jobs:
         run: |
           conan profile detect
           conan version
-          cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
+          cp .github/conan2/linux_default ~/.conan2/profiles/default
           conan profile show
           mkdir -p libs
           mkdir -p build
@@ -57,31 +147,19 @@ jobs:
         run: |
           conan install . --output-folder=build --build=missing
           cd build
-          cp ../toolchains/${{matrix.TARGET}}-x86_64.cmake conan_toolchain.cmake
-          LIB_SUFFIX="-${{matrix.TARGET}}-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          cp ../toolchains/linux-x86_64.cmake conan_toolchain.cmake
+          LIB_SUFFIX="-linux-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
           file lib*
           cp libjudy* ../libs/
           rm -fr *
 
-      - name: compile aarch64
-        shell: bash
-        run: |
-          conan install . --output-folder=build --build=missing
-          cd build
-          cp ../toolchains/${{matrix.TARGET}}-aarch64.cmake conan_toolchain.cmake
-          LIB_SUFFIX="-${{matrix.TARGET}}-aarch64" cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
-          cmake --build .
-          file lib*
-          cp libjudy* ../libs/
-          rm -fr *
-
-      - name: artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: libjudy-${{ matrix.TARGET }}
-          path: libs/libjudy*
-          retention-days: 1
+      # - name: artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: libjudy-linux
+      #     path: libs/libjudy*
+      #     retention-days: 1
 
   # package:
   #   needs:
