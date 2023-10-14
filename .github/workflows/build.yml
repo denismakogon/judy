@@ -65,7 +65,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. ${{ matrix.CMAKE_AMD_FLAGS }} -DCMAKE_BUILD_TYPE=Release
+          cmake .. ${{ matrix.CMAKE_AMD_FLAGS }} -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
           cp libjudy* ../libs/
 
@@ -73,7 +73,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake .. ${{ matrix.CMAKE_AARCH_FLAGS }} -DCMAKE_BUILD_TYPE=Release
+          cmake .. ${{ matrix.CMAKE_AARCH_FLAGS }} -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
           cp libjudy* ../libs/
 
