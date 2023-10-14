@@ -19,7 +19,9 @@ jobs:
         uses: actions/cache@v3
         id: cmakelists
         with:
-          path: CMakeLists.txt
+          path: |
+            CMakeLists.txt
+            /usr/local/Cellar
           key: ${{ github.sha }}-${{ github.run_id }}
 
       - name: Set up Homebrew
@@ -88,7 +90,7 @@ jobs:
         with:
           path: |
             CMakeLists.txt
-            /usr/local/Cellar
+            /home/linuxbrew/.linuxbrew/Cellar
           key: ${{ github.sha }}-${{ github.run_id }}
 
       - name: Set up Homebrew
@@ -131,138 +133,134 @@ jobs:
           path: libs/libjudy*
           retention-days: 1
 
-  # package:
-  #   needs:
-  #     - build
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os: [ ubuntu-latest ]
-  #       include:
-  #         - os: ubuntu-latest
-  #           TARGET: linux
-  #           PLATFORM: x64
-  #   steps:
-  #     - name: 'Check out repository'
-  #       uses: actions/checkout@v3
-  #       with:
-  #         fetch-depth: 1
+  package:
+    needs: [ build-on-macos, build-on-linux ]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        include:
+          - os: ubuntu-latest
+            TARGET: linux
+            PLATFORM: x64
+    steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-  #     - name: 'Download jextract'
-  #       id: jextract
-  #       uses: oracle-actions/setup-java@v1
-  #       with:
-  #         install: false
-  #         uri: https://download.java.net/java/early_access/jextract/1/openjdk-21-jextract+1-2_${{ matrix.TARGET }}-x64_bin.tar.gz
+      - name: caching
+        uses: actions/cache@v3
+        id: cmakelists
+        with:
+          path: |
+            CMakeLists.txt
+            /usr/local/Cellar
+          key: ${{ github.sha }}-${{ github.run_id }}
+  
+      - name: 'Download jextract'
+        id: jextract
+        uses: oracle-actions/setup-java@v1
+        with:
+          install: false
+          uri: https://download.java.net/java/early_access/jextract/1/openjdk-21-jextract+1-2_${{ matrix.TARGET }}-x64_bin.tar.gz
 
-  #     - name: 'Extract jextract'
-  #       shell: sh
-  #       run: |
-  #         mkdir -p /tmp/jextract
-  #         tar --strip-components=1 -xvf ${{ steps.jextract.outputs.archive }} -C /tmp/jextract
-  #         export PATH=${PATH}:/tmp/jextract/bin
+      - name: 'Extract jextract'
+        shell: sh
+        run: |
+          mkdir -p /tmp/jextract
+          tar --strip-components=1 -xvf ${{ steps.jextract.outputs.archive }} -C /tmp/jextract
+          export PATH=${PATH}:/tmp/jextract/bin
 
-  #     - name: 'Install OracleJDK GA'
-  #       id: jdk_21
-  #       uses: oracle-actions/setup-java@v1
-  #       with:
-  #         website: oracle.com
-  #         release: 21
+      - name: 'Install OracleJDK GA'
+        id: jdk_21
+        uses: oracle-actions/setup-java@v1
+        with:
+          website: oracle.com
+          release: 21
 
-  #     - name: prepare-project
-  #       shell: bash
-  #       run: |
-  #         export PATH=${PATH}:/tmp/jextract/bin
-  #         mkdir -p build
-  #         jextract -I /usr/local/include @jextract_dump.txt include/api.h
+      - name: prepare-project
+        shell: bash
+        run: |
+          export PATH=${PATH}:/tmp/jextract/bin
+          mkdir -p build
+          jextract -I /usr/local/include @jextract_dump.txt include/api.h
 
-  #     - name: version
-  #       id: version
-  #       shell: bash
-  #       run: echo "version_var=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+      - name: version
+        id: version
+        shell: bash
+        run: echo "version_var=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
 
-  #     - name: Set up Homebrew
-  #       id: set-up-homebrew
-  #       uses: Homebrew/actions/setup-homebrew@master
-  #       with:
-  #         test-bot: false
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        with:
+          test-bot: false
 
-  #     - name: install prerequisites
-  #       shell: bash
-  #       run: |
-  #         brew install gcc
-  #         brew install conan
+      - name: install prerequisites
+        shell: bash
+        run: |
+          brew install gcc
+          brew install conan
 
-  #     - name: conan-profile
-  #       shell: bash
-  #       run: |
-  #         conan profile detect
-  #         conan version
-  #         cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
-  #         conan profile show
+      - name: conan-profile
+        shell: bash
+        run: |
+          conan profile detect
+          conan version
+          cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
+          conan profile show
 
-  #     - name: conan-install
-  #       shell: bash
-  #       run: |
-  #         mkdir -p build
-  #         conan install . --output-folder=build --build=missing
-  #         cd build
-  #         cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+      - name: conan-install
+        shell: bash
+        run: |
+          mkdir -p build
+          conan install . --output-folder=build --build=missing
+          cd build
+          cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 
-  #     - name: java sources
-  #       shell: bash
-  #       run: |
-  #         export PATH=${PATH}:/tmp/jextract/bin
-  #         cd build
-  #         make java-sources
-  #         mkdir src/main/resources
+      - name: java sources
+        shell: bash
+        run: |
+          export PATH=${PATH}:/tmp/jextract/bin
+          cd build
+          make java-sources
+          mkdir src/main/resources
 
-  #     - name: libjudy-x86_64.linux
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: libjudy-x86_64.linux
-  #         path: build/src/main/resources/lib
+      - name: libjudy-linux
+        uses: actions/download-artifact@v3
+        with:
+          name: libjudy-linux
+          path: build/src/main/resources/lib
 
-  #     - name: libjudy-x86_64.macos
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: libjudy-x86_64.macos
-  #         path: build/src/main/resources/lib
+      - name: libjudy-macos
+        uses: actions/download-artifact@v3
+        with:
+          name: libjudy-macos
+          path: build/src/main/resources/lib
 
-  #     - name: libjudy-arm64.linux
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: libjudy-arm64.linux
-  #         path: build/src/main/resources/lib
+      - name: Display structure of downloaded files
+        run: ls -R
+        working-directory: build/src/main/resources
 
-  #     - name: libjudy-arm64.macos
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: libjudy-arm64.macos
-  #         path: build/src/main/resources/lib 
+      - name: jar
+        shell: bash
+        run: |
+          cd build
+          make jar
 
-  #     - name: Display structure of downloaded files
-  #       run: ls -R
-  #       working-directory: build/src/main/resources
+      - name: jar tf
+        run: jar tf ../target/judy*.jar
+        working-directory: build/
 
-  #     - name: jar
-  #       shell: bash
-  #       run: |
-  #         cd build
-  #         make jar
-
-  #     - name: jar tf
-  #       run: jar tf ../target/judy*.jar
-  #       working-directory: build/
-
-  #     - name: 'make release'
-  #       if: github.event_name == 'push'
-  #       uses: marvinpinto/action-automatic-releases@latest
-  #       with:
-  #         repo_token: ${{ secrets.GH_RELEASE_TOKEN }}
-  #         automatic_release_tag: ${{ env.version_var }}
-  #         prerelease: false
-  #         title: Judy C++ UDP server ${{ env.version_var }} for Java
-  #         files: |
-  #           LICENSE
-  #           target/*.jar
+      - name: 'make release'
+        if: github.event_name == 'push'
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GH_RELEASE_TOKEN }}
+          automatic_release_tag: ${{ env.version_var }}
+          prerelease: false
+          title: Judy C++ UDP server ${{ env.version_var }} for Java
+          files: |
+            LICENSE
+            target/*.jar
