@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           brew install gcc
-          brew install conan@2.0.13_1
+          pip3 install conan
 
       - name: conan-profile
         shell: bash
