@@ -21,7 +21,6 @@ jobs:
         with:
           path: |
             CMakeLists.txt
-            /usr/local/Cellar
           key: ${{ github.sha }}-${{ github.run_id }}
 
       - name: Set up Homebrew
