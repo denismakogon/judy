@@ -7,21 +7,11 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-        include:
-          - os: ubuntu-latest
-            TARGET: linux
-            PLATFORM: x64
-          - os: macos-latest
-            TARGET: macos
-            PLATFORM: x64
+  build-on-macos:
+    runs-on: macos-latest
     steps:
       - name: 'Check out repository'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
@@ -29,7 +19,77 @@ jobs:
         uses: actions/cache@v3
         id: cmakelists
         with:
-          path: CMakeLists.txt
+          path: |
+            CMakeLists.txt
+          key: ${{ github.sha }}-${{ github.run_id }}
+
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+        with:
+          test-bot: false
+
+      - name: install prerequisites
+        shell: bash
+        run: |
+          brew install gcc
+          pip3 install conan
+
+      - name: conan-profile
+        shell: bash
+        run: |
+          conan profile detect
+          conan version
+          cp .github/conan2/macos_default ~/.conan2/profiles/default
+          conan profile show
+          mkdir -p libs
+          mkdir -p build
+
+      - name: compile x86_64
+        shell: bash
+        run: |
+          conan install . --output-folder=build --build=missing
+          cd build
+          cp ../toolchains/macos-x86_64.cmake conan_toolchain.cmake
+          LIB_SUFFIX="-macos-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          cmake --build .
+          file lib*
+          cp libjudy* ../libs/
+          rm -fr *
+
+      - name: compile aarch64
+        shell: bash
+        run: |
+          conan install . --output-folder=build --build=missing
+          cd build
+          cp ../toolchains/macos-aarch64.cmake conan_toolchain.cmake
+          LIB_SUFFIX="-macos-aarch64" cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          cmake --build .
+          file lib*
+          cp libjudy* ../libs/
+          rm -fr *
+
+      - name: artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: libjudy-macos
+          path: libs/libjudy*
+          retention-days: 1
+
+  build-on-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: caching
+        uses: actions/cache@v3
+        id: cmakelists
+        with:
+          path: |
+            CMakeLists.txt
+            /home/linuxbrew/.linuxbrew/Cellar
           key: ${{ github.sha }}-${{ github.run_id }}
 
       - name: Set up Homebrew
@@ -49,28 +109,31 @@ jobs:
         run: |
           conan profile detect
           conan version
-          cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
+          cp .github/conan2/linux_default ~/.conan2/profiles/default
           conan profile show
+          mkdir -p libs
+          mkdir -p build
 
-      - name: conan-install
+      - name: compile x86_64
         shell: bash
         run: |
-          mkdir -p build
           conan install . --output-folder=build --build=missing
           cd build
-          cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+          LIB_SUFFIX="-linux-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
+          file lib*
+          cp libjudy* ../libs/
+          rm -fr CMakeFiles/
 
       - name: artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: libjudy.${{ matrix.TARGET }}
-          path: build/libjudy*
+          name: libjudy-linux
+          path: libs/libjudy*
           retention-days: 1
 
   package:
-    needs:
-      - build
+    needs: [ build-on-macos, build-on-linux ]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -81,10 +144,19 @@ jobs:
             PLATFORM: x64
     steps:
       - name: 'Check out repository'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
+      - name: caching
+        uses: actions/cache@v3
+        id: cmakelists
+        with:
+          path: |
+            CMakeLists.txt
+            /usr/local/Cellar
+          key: ${{ github.sha }}-${{ github.run_id }}
+  
       - name: 'Download jextract'
         id: jextract
         uses: oracle-actions/setup-java@v1
@@ -154,16 +226,16 @@ jobs:
           make java-sources
           mkdir src/main/resources
 
-      - name: libjudy.so
+      - name: libjudy-linux
         uses: actions/download-artifact@v3
         with:
-          name: libjudy.linux
+          name: libjudy-linux
           path: build/src/main/resources/lib
 
-      - name: libjudy.dylib
+      - name: libjudy-macos
         uses: actions/download-artifact@v3
         with:
-          name: libjudy.macos
+          name: libjudy-macos
           path: build/src/main/resources/lib
 
       - name: Display structure of downloaded files

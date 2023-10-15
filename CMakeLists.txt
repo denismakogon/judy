@@ -1,11 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(judy LANGUAGES C CXX VERSION 0.0.1 DESCRIPTION "Multithreaded CPP UDP server consumable through the C ABI consumption")
-
-set(CMAKE_OSX_ARCHITECTURES "x86_64")
+project(judy LANGUAGES C CXX VERSION 0.0.1 DESCRIPTION "Multithreaded C++ UDP server consumable through the C ABI consumption")
 
 execute_process(COMMAND date +'%Y.%m.%d' OUTPUT_VARIABLE JAR_VERSION)
-execute_process(COMMAND uname -m COMMAND tr -d '\n' OUTPUT_VARIABLE ARCHITECTURE)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(STDLIB_INCLUDE /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/usr/include)
@@ -26,11 +23,11 @@ message(STATUS "Found boost includes at " ${Boost_INCLUDE_DIR})
 AUX_SOURCE_DIRECTORY(src SOURCES)
 
 add_executable(${PROJECT_NAME}-main ${SOURCES} ${HEADERS})
-add_library(${PROJECT_NAME}-${ARCHITECTURE} SHARED ${SOURCES} ${HEADERS})
+add_library(${PROJECT_NAME}$ENV{LIB_SUFFIX} SHARED ${SOURCES} ${HEADERS})
 target_include_directories(${PROJECT_NAME}-main PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_include_directories(${PROJECT_NAME}-${ARCHITECTURE} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(${PROJECT_NAME}$ENV{LIB_SUFFIX} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(${PROJECT_NAME}-main ${Boost_LIBRARIES} )
-target_link_libraries(${PROJECT_NAME}-${ARCHITECTURE} PRIVATE Threads::Threads)
+target_link_libraries(${PROJECT_NAME}$ENV{LIB_SUFFIX} PRIVATE Threads::Threads)
 
 add_custom_target(
     java-sources 
