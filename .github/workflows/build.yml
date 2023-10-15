@@ -38,6 +38,7 @@ jobs:
       - name: conan-profile
         shell: bash
         run: |
+          pip3 install --ignore-installed six
           conan profile detect
           conan version
           cp .github/conan2/macos_default ~/.conan2/profiles/default
