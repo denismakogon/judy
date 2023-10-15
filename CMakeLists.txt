@@ -10,14 +10,6 @@ else()
     set(STDLIB_INCLUDE /usr/local/include)
 endif()
 
-# if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch")
-#     if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-#         if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-#             include(${CMAKE_CURRENT_LIST_DIR}/../toolchains/linux-aarch64.cmake)
-#         endif()
-#     endif()
-# endif()
-
 add_definitions("-std=c++14")
 add_compile_options(-pthread)
 
