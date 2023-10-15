@@ -22,7 +22,6 @@ jobs:
           path: |
             CMakeLists.txt
             /usr/local/Cellar
-            /Users/runner/.conan2
           key: ${{ github.sha }}-${{ github.run_id }}
 
       - name: Set up Homebrew
@@ -92,7 +91,6 @@ jobs:
           path: |
             CMakeLists.txt
             /home/linuxbrew/.linuxbrew/Cellar
-            /home/runner/.conan2
           key: ${{ github.sha }}-${{ github.run_id }}
 
       - name: Set up Homebrew
