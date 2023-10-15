@@ -132,7 +132,8 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get -y install gcc-aarch64-linux-gnu
+          sudo apt-get -y install gcc-aarch64-linux-gnu debootstrap
+          sudo debootstrap --arch=arm64 bookworm /chroot-debian http://deb.debian.org/debian/
 
       - name: artifacts
         uses: actions/upload-artifact@v3
