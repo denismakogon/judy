@@ -33,12 +33,11 @@ jobs:
         shell: bash
         run: |
           brew install gcc
-          brew install conan
+          brew install conan@2.0.13_1
 
       - name: conan-profile
         shell: bash
         run: |
-          pip3 install --ignore-installed six
           conan profile detect
           conan version
           cp .github/conan2/macos_default ~/.conan2/profiles/default
