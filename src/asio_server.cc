@@ -7,6 +7,7 @@
 #include <boost/thread.hpp>
 
 #include "timestamp.h"
+#include "structs.h"
 
 using namespace boost::asio;
 
@@ -16,7 +17,7 @@ namespace {
 }
 
 struct UdpServer {
-    explicit UdpServer(ip::udp::socket socket, void (*handler_)(char*, long, char*, int), void (*before_handler_)(char*, char*, int, long, char*, int), void (*after_handler_)(char*, long, char*, int), int bufferSize, int threadPoolSize)
+    explicit UdpServer(ip::udp::socket socket, void (*handler_)(struct udp_request* request), void (*before_handler_)(char*, char*, int, long, char*, int), void (*after_handler_)(char*, long, char*, int), int bufferSize, int threadPoolSize)
         : socket_(std::move(socket)), pool(threadPoolSize) {
             this->handler = handler_;
             this->before_handler = before_handler_;
@@ -36,10 +37,11 @@ private:
     }
 
     void handleRequest(char* data_, std::size_t bytes_transferred, const char* clientAddress, int clientPort) {
+        udp_request req = {
+            bytes_transferred, data_, (char*) clientAddress, clientPort
+        };
         boost::asio::post(this->pool, boost::bind(
-            this->handler, data_, bytes_transferred,
-            (char*) clientAddress,
-            clientPort
+            this->handler, &req
         ));
 
         printf("%s [INFO] passing UDP request to judy.server.udp[%s:%d] foreign handler | payload size: %lu bytes\n",
@@ -99,12 +101,12 @@ private:
     boost::asio::thread_pool pool;
     ip::udp::socket socket_;
     ip::udp::endpoint remote_endpoint_;
-    void (*handler)(char*, long, char*, int);
+    void (*handler)(struct udp_request* request);
     void (*before_handler)(char*, char*, int, long, char*, int);
     void (*after_handler)(char*, long, char*, int);
 };
 
-void startBoostServer(void (*handler)(char*, long, char*, int), 
+void startBoostServer(void (*handler)(struct udp_request* request), 
                       void (*before_handler)(char*, char*, int, long, char*, int),
                       void (*after_handler)(char*, long, char*, int), 
                       int port, int bufferSize, int threadCount) {

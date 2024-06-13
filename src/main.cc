@@ -2,10 +2,11 @@
 #include <thread>
 
 #include "server.h"
+#include "structs.h"
 #include "timestamp.h"
 
-void printRequest(char*, long bytesTransferred, char* host, int port) {
-    printf("%s [INFO] packet is %ld bytes long\n", currentDateTime().c_str(), bytesTransferred);
+void printRequest(struct udp_request* request) {
+    printf("%s [INFO] packet is %ld bytes long\n", currentDateTime().c_str(), request->bytesReceived);
     std::flush(std::cout);
 }
 
