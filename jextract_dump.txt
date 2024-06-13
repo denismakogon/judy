@@ -1,6 +1,6 @@
 #### Extracted from: include/structs.h
 
---source -t judy.server
+-t judy.server
 -I include/
 --include-function nativeServer
 --include-function boostServer
