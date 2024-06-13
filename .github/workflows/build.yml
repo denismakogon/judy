@@ -162,7 +162,7 @@ jobs:
         uses: oracle-actions/setup-java@v1
         with:
           install: false
-          uri: https://download.java.net/java/early_access/jextract/1/openjdk-21-jextract+1-2_${{ matrix.TARGET }}-x64_bin.tar.gz
+          uri: https://download.java.net/java/early_access/jextract/22/5/openjdk-22-jextract+5-33_${{matrix.TARGET}}-${{matrix.PLATFORM}}_bin.tar.gz
 
       - name: 'Extract jextract'
         shell: sh
@@ -172,11 +172,11 @@ jobs:
           export PATH=${PATH}:/tmp/jextract/bin
 
       - name: 'Install OracleJDK GA'
-        id: jdk_21
+        id: jdk
         uses: oracle-actions/setup-java@v1
         with:
           website: oracle.com
-          release: 21
+          release: 22
 
       - name: prepare-project
         shell: bash
