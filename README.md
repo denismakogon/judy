@@ -54,10 +54,11 @@ make jar
 #include "server.h"
 #include "structs.h"
 
-void printRequest(char*, long bytesTransferred, char* host, int port) {
-    printf("a new packet from %s:%d of %ld bytes received!\n", host, port, bytesTransferred);
+void printRequest(struct udp_request* request) {
+    printf("%s [INFO] packet is %ld bytes long\n", currentDateTime().c_str(), request->bytesReceived);
     std::flush(std::cout);
 }
+
 
 int main(int argc, char const *argv[]) {
     return startNativeServer(printRequest, 20777, 2048, 1000);
@@ -75,8 +76,8 @@ see [main.cc](src/main.cc) for more details.
 
 #include "server.h"
 
-void printRequest(char*, long bytesTransferred, char* host, int port) {
-    printf("a new packet from %s:%d of %ld bytes received!\n", host, port, bytesTransferred);
+void printRequest(struct udp_request* request) {
+    printf("%s [INFO] packet is %ld bytes long\n", currentDateTime().c_str(), request->bytesReceived);
     std::flush(std::cout);
 }
 
