@@ -49,7 +49,7 @@ jobs:
       - name: compile x86_64
         shell: bash
         run: |
-          conan install . --output-folder=build --build=missing -o 'boost*/*:without_stacktrace_backtrace=true' -o 'boost*/*:without_stacktrace_from_exception=true’ -o boost*/*:without_locale=true'
+          conan install . --output-folder=build  --build=missing --profile=default -pr:b=default --build=b2 --settings build_type=Release 
           cd build
           cp ../toolchains/macos-x86_64.cmake conan_toolchain.cmake
           LIB_SUFFIX="-macos-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
@@ -61,7 +61,7 @@ jobs:
       - name: compile aarch64
         shell: bash
         run: |
-          conan install . --output-folder=build --build=missing -o 'boost*/*:without_stacktrace_backtrace=true' -o 'boost*/*:without_stacktrace_from_exception=true’ -o boost*/*:without_locale=true'
+          conan install . --output-folder=build  --build=missing --profile=default -pr:b=default --build=b2 --settings build_type=Release 
           cd build
           cp ../toolchains/macos-aarch64.cmake conan_toolchain.cmake
           LIB_SUFFIX="-macos-aarch64" cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
