@@ -46,17 +46,17 @@ jobs:
           mkdir -p libs
           mkdir -p build
 
-      - name: compile x86_64
-        shell: bash
-        run: |
-          conan install . --output-folder=build  --build=missing --profile=default -pr:b=default --build=b2 --settings build_type=Release 
-          cd build
-          cp ../toolchains/macos-x86_64.cmake conan_toolchain.cmake
-          LIB_SUFFIX="-macos-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
-          cmake --build .
-          file lib*
-          cp libjudy* ../libs/
-          rm -fr *
+      # - name: compile x86_64
+      #   shell: bash
+      #   run: |
+      #     conan install . --output-folder=build  --build=missing --profile=default -pr:b=default --build=b2 --settings build_type=Release 
+      #     cd build
+      #     cp ../toolchains/macos-x86_64.cmake conan_toolchain.cmake
+      #     LIB_SUFFIX="-macos-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+      #     cmake --build .
+      #     file lib*
+      #     cp libjudy* ../libs/
+      #     rm -fr *
 
       - name: compile aarch64
         shell: bash
