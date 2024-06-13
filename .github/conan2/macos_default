@@ -12,6 +12,4 @@ CC=/usr/bin/clang
 CXX=/usr/bin/clang++
 
 [options]
-boost/*:without_stacktrace_backtrace=True
-boost/*:without_boost_stacktrace_backtrace=True
-boost/*:without_boost_locale=True
+boost/*:with_stacktrace_backtrace=True
