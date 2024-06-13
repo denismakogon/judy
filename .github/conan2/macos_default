@@ -14,4 +14,4 @@ CXX=/usr/bin/clang++
 [options]
 boost/*:without_stacktrace_backtrace=True
 boost/*:without_locale=True
-boost/*:without_stacktrace_from_exception=False
+boost/*:without_stacktrace_from_exception=True
