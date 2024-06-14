@@ -10,3 +10,7 @@ os=Macos
 [buildenv]
 CC=/usr/bin/clang
 CXX=/usr/bin/clang++
+
+[options]
+boost/*:with_stacktrace_backtrace=False
+boost/*:without_locale=True

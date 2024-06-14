@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 1
 
       - name: caching
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cmakelists
         with:
           path: |
@@ -32,8 +32,9 @@ jobs:
       - name: install prerequisites
         shell: bash
         run: |
+          brew install python@3.12
           brew install gcc
-          pip3 install conan
+          pip3 install conan --break-system-packages
 
       - name: conan-profile
         shell: bash
@@ -48,7 +49,7 @@ jobs:
       - name: compile x86_64
         shell: bash
         run: |
-          conan install . --output-folder=build --build=missing
+          conan install . --output-folder=build --build=missing 
           cd build
           cp ../toolchains/macos-x86_64.cmake conan_toolchain.cmake
           LIB_SUFFIX="-macos-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
@@ -70,7 +71,7 @@ jobs:
           rm -fr *
 
       - name: artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libjudy-macos
           path: libs/libjudy*
@@ -84,7 +85,7 @@ jobs:
           fetch-depth: 1
 
       - name: caching
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cmakelists
         with:
           path: |
@@ -126,7 +127,7 @@ jobs:
           rm -fr CMakeFiles/
 
       - name: artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: libjudy-linux
           path: libs/libjudy*
@@ -149,7 +150,7 @@ jobs:
           fetch-depth: 1
 
       - name: caching
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cmakelists
         with:
           path: |
@@ -162,7 +163,7 @@ jobs:
         uses: oracle-actions/setup-java@v1
         with:
           install: false
-          uri: https://download.java.net/java/early_access/jextract/1/openjdk-21-jextract+1-2_${{ matrix.TARGET }}-x64_bin.tar.gz
+          uri: https://download.java.net/java/early_access/jextract/22/5/openjdk-22-jextract+5-33_${{matrix.TARGET}}-${{matrix.PLATFORM}}_bin.tar.gz
 
       - name: 'Extract jextract'
         shell: sh
@@ -172,11 +173,11 @@ jobs:
           export PATH=${PATH}:/tmp/jextract/bin
 
       - name: 'Install OracleJDK GA'
-        id: jdk_21
+        id: jdk
         uses: oracle-actions/setup-java@v1
         with:
           website: oracle.com
-          release: 21
+          release: 22
 
       - name: prepare-project
         shell: bash
@@ -227,13 +228,13 @@ jobs:
           mkdir src/main/resources
 
       - name: libjudy-linux
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: libjudy-linux
           path: build/src/main/resources/lib
 
       - name: libjudy-macos
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: libjudy-macos
           path: build/src/main/resources/lib

@@ -14,4 +14,11 @@ struct udpRequest {
     struct sockaddr_in clientaddr;
 };
 
+struct udp_request {
+    size_t bytesReceived;
+    char* data;
+    char* host;
+    int port;
+};
+
 #endif /* structs_h */
