@@ -228,13 +228,13 @@ jobs:
           mkdir src/main/resources
 
       - name: libjudy-linux
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: libjudy-linux
           path: build/src/main/resources/lib
 
       - name: libjudy-macos
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: libjudy-macos
           path: build/src/main/resources/lib
