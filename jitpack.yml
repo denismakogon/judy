@@ -2,9 +2,10 @@ before_install:
    - sdk install java 22-open
 install:
 - PROJECT=judy
-- version=$(date +'%Y.%m.%d')
+- version=$(date +'%Y.%m.%d+%s')
 - JAR_NAME="$PROJECT.latest.jar"
 - FILE="jars/$JAR_NAME"
 - mkdir jars/
 - curl -L -o jars/$JAR_NAME https://github.com/denismakogon/$PROJECT/releases/download/$version/$JAR_NAME
+- jar tf jars/$JAR_NAME
 - mvn install:install-file -Dfile=$FILE -DgroupId=com.github.denismakogon -DartifactId=${PROJECT} -Dversion=$version -Dpackaging=jar -DgeneratePom=true
