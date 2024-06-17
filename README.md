@@ -24,6 +24,8 @@ build_type=Release
 compiler.cppstd=14
 
 [options]
+boost/*:with_stacktrace_backtrace=False
+boost/*:without_locale=True
 
 [build_requires]
 
