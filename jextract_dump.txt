@@ -2,6 +2,7 @@
 
 -t judy.server
 -I include/
+--include-struct   udp_request
 --include-function nativeServer
 --include-function boostServer
 --output src/main/java
