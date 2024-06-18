@@ -1,8 +1,8 @@
 before_install:
-   - sdk install java 23.ea.27-open
+   - sdk install java 22-open
 install:
 - PROJECT=judy
-- version=$(date +'%Y.%m.%d+%s')
+- version=$(date +'%Y.%m.%d')
 - JAR_NAME="$PROJECT.latest.jar"
 - FILE="jars/$JAR_NAME"
 - mkdir jars/
