@@ -189,7 +189,7 @@ jobs:
       - name: version
         id: version
         shell: bash
-        run: echo "version_var=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+        run: echo "version_var=$(date +'%Y.%m.%d+%s')" >> $GITHUB_ENV
 
       - name: Set up Homebrew
         id: set-up-homebrew
