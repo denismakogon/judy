@@ -41,15 +41,13 @@ jobs:
         run: |
           conan profile detect
           conan version
-          cp .github/conan2/macos_default ~/.conan2/profiles/default
           conan profile show
           mkdir -p libs
-          mkdir -p build
 
       - name: compile x86_64
         shell: bash
         run: |
-          conan install . --output-folder=build --build=missing 
+          conan install conanfile.txt --output-folder=build --build=missing -s:h arch=x86_64
           cd build
           cp ../toolchains/macos-x86_64.cmake conan_toolchain.cmake
           LIB_SUFFIX="-macos-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
@@ -61,7 +59,7 @@ jobs:
       - name: compile aarch64
         shell: bash
         run: |
-          conan install . --output-folder=build --build=missing
+          conan install conanfile.txt --output-folder=build --build=missing
           cd build
           cp ../toolchains/macos-aarch64.cmake conan_toolchain.cmake
           LIB_SUFFIX="-macos-aarch64" cmake .. -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
@@ -157,7 +155,7 @@ jobs:
             CMakeLists.txt
             /usr/local/Cellar
           key: ${{ github.sha }}-${{ github.run_id }}
-  
+
       - name: 'Download jextract'
         id: jextract
         uses: oracle-actions/setup-java@v1
