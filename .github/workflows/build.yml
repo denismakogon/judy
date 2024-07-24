@@ -41,7 +41,7 @@ jobs:
         run: |
           conan profile detect
           conan version
-          conan profile show
+          conan profile show -pr default
           mkdir -p libs
 
       - name: compile x86_64
@@ -108,15 +108,14 @@ jobs:
         run: |
           conan profile detect
           conan version
-          cp .github/conan2/linux_default ~/.conan2/profiles/default
-          conan profile show
+          conan profile show -pr default
           mkdir -p libs
           mkdir -p build
 
       - name: compile x86_64
         shell: bash
         run: |
-          conan install . --output-folder=build --build=missing
+          conan install . --output-folder=build --build=missing -s:h arch=x86_64
           cd build
           LIB_SUFFIX="-linux-x86_64" cmake ..  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Release
           cmake --build .
@@ -206,8 +205,7 @@ jobs:
         run: |
           conan profile detect
           conan version
-          cp .github/conan2/${{ matrix.TARGET }}_default ~/.conan2/profiles/default
-          conan profile show
+          conan profile show -pr default
 
       - name: conan-install
         shell: bash
